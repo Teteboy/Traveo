@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import {
   CheckCircle,
   Clock,
@@ -32,7 +31,7 @@ interface VerificationStep {
   id: string
   name: string
   description: string
-  status: 'verified' | 'pending' | 'incomplete' | 'not_started'
+  status: 'verified' | 'pending' | 'incomplete' | 'not_started' | string
   icon: React.ElementType
 }
 
@@ -46,7 +45,6 @@ export function ProviderVerificationPage() {
   const [error, setError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
-  const [selectedStep, setSelectedStep] = useState<string | null>(null)
   const [documentType, setDocumentType] = useState('')
   const [documentUrl, setDocumentUrl] = useState('')
 
@@ -62,7 +60,7 @@ export function ProviderVerificationPage() {
       const response = await apiClient.get<{ data: ProviderProfile }>('/providers/me')
       console.log('[VerificationPage] Response:', response)
       
-      const profileData = response.data?.data || response.data
+      const profileData = (response as any).data?.data || (response as any).data
       console.log('[VerificationPage] Profile data:', profileData)
       
       if (profileData) {
@@ -168,8 +166,7 @@ export function ProviderVerificationPage() {
     return labels[type] || type
   }
 
-  const handleStartUpload = (stepId: string) => {
-    setSelectedStep(stepId)
+  const handleStartUpload = () => {
     setShowUploadDialog(true)
     setDocumentType('')
     setDocumentUrl('')
@@ -186,13 +183,13 @@ export function ProviderVerificationPage() {
       await apiClient.post('/auth/provider-verification-documents', {
         documentType,
         documentUrl,
+        fileName: documentUrl.split('/').pop() || 'document.pdf',
       })
 
       // Refresh provider profile to get updated progress
       await fetchProviderProfile()
 
       setShowUploadDialog(false)
-      setSelectedStep(null)
       alert('Document téléchargé avec succès !')
     } catch (error: any) {
       alert(error.response?.data?.message || 'Erreur lors du téléchargement')
@@ -371,7 +368,7 @@ export function ProviderVerificationPage() {
                     <Button
                       variant={step.status === 'incomplete' ? 'default' : 'outline'}
                       className={step.status === 'incomplete' ? 'bg-[#44DBD4] hover:bg-[#3bc9c2]' : ''}
-                      onClick={() => handleStartUpload(step.id)}
+                      onClick={() => handleStartUpload()}
                       disabled={step.status === 'verified'}
                     >
                       {step.status === 'incomplete' ? 'Compléter maintenant' : 'Commencer la vérification'}
@@ -443,7 +440,6 @@ export function ProviderVerificationPage() {
                   className="flex-1"
                   onClick={() => {
                     setShowUploadDialog(false)
-                    setSelectedStep(null)
                   }}
                   disabled={isUploading}
                 >

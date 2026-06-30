@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { useProviderAuthStore } from '@/stores/providerAuthStore'
 import { apiClient } from '@/lib/apiClient'
-import { User, Building2, Shield, CreditCard, Save, Edit, Download, Loader2 } from 'lucide-react'
+import { User, Building2, Shield, CreditCard, Save, Edit, Download, Loader2, DollarSign } from 'lucide-react'
 import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
 
 export function ProviderSettingsPage() {
   const { provider, updateProviderProfile } = useProviderAuthStore()
@@ -26,6 +27,24 @@ export function ProviderSettingsPage() {
   const [savingBusiness, setSavingBusiness] = useState(false)
   const [pwd, setPwd] = useState({ current: '', next: '', confirm: '' })
   const [savingPwd, setSavingPwd] = useState(false)
+
+  // Fetch earnings data
+  const { data: earningsData, isLoading: earningsLoading } = useQuery({
+    queryKey: ['provider-earnings'],
+    queryFn: async () => {
+      const response = await apiClient.get('/providers/earnings')
+      return response.data
+    },
+  })
+
+  // Fetch payout requests
+  const { data: payoutsData, isLoading: payoutsLoading } = useQuery({
+    queryKey: ['provider-payouts'],
+    queryFn: async () => {
+      const response = await apiClient.get('/providers/payouts')
+      return response.data
+    },
+  })
 
   const saveProfile = async () => {
     setSavingProfile(true)
@@ -221,84 +240,118 @@ export function ProviderSettingsPage() {
         <TabsContent value="billing" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Current Plan</CardTitle>
+              <CardTitle>Earnings Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <Badge className="bg-[#44DBD4] text-white mb-2">PRO</Badge>
-                  <h3 className="text-2xl font-bold">Pro Plan</h3>
-                  <p className="text-slate-600">
-                    $99 <span className="text-sm">/ month</span>
-                  </p>
+              {earningsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-[#44DBD4]" />
                 </div>
-                <Button variant="outline">Upgrade</Button>
-              </div>
-              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <p className="text-sm text-slate-600">Next Billing Date</p>
-                  <p className="font-semibold">March 1, 2026</p>
+              ) : earningsData ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <p className="text-sm text-slate-600 mb-1">Total Revenue</p>
+                    <p className="text-2xl font-bold text-[#44DBD4]">
+                      {(earningsData.totalRevenue / 100).toLocaleString()} {earningsData.currency}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <p className="text-sm text-slate-600 mb-1">Pending Payments</p>
+                    <p className="text-2xl font-bold text-orange-500">
+                      {(earningsData.pendingPayments / 100).toLocaleString()} {earningsData.currency}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <p className="text-sm text-slate-600 mb-1">Commission Fees</p>
+                    <p className="text-2xl font-bold text-red-500">
+                      {(earningsData.commissionFees / 100).toLocaleString()} {earningsData.currency}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <p className="text-sm text-slate-600 mb-1">Avg Booking Value</p>
+                    <p className="text-2xl font-bold text-slate-700">
+                      {(earningsData.avgBookingValue / 100).toLocaleString()} {earningsData.currency}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-600">Status</p>
-                  <Badge className="bg-green-100 text-green-700">Active</Badge>
-                </div>
-              </div>
+              ) : (
+                <p className="text-slate-500">No earnings data available</p>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
+              <CardTitle>Payout Requests</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg mb-4">
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-8 w-8 text-slate-400" />
-                  <div>
-                    <p className="font-medium">•••• •••• •••• 4242</p>
-                    <p className="text-sm text-slate-500">Visa • Expires 09/27</p>
-                  </div>
+              {payoutsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-[#44DBD4]" />
                 </div>
-                <Button variant="ghost" size="sm">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Update
-                </Button>
-              </div>
+              ) : payoutsData?.items && payoutsData.items.length > 0 ? (
+                <div className="space-y-3">
+                  {payoutsData.items.map((payout: any) => (
+                    <div
+                      key={payout.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">Payout Request</p>
+                        <p className="text-sm text-slate-500">
+                          {new Date(payout.requestedAt).toLocaleDateString()} • {payout.bankDetails}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <p className="font-semibold">{payout.amount.toLocaleString()} {payout.currency}</p>
+                        <Badge
+                          className={
+                            payout.status === 'COMPLETED'
+                              ? 'bg-green-100 text-green-700'
+                              : payout.status === 'PROCESSING'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }
+                        >
+                          {payout.status.toLowerCase()}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500">No payout requests found</p>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Billing History</CardTitle>
+              <CardTitle>Request Payout</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { period: 'February 2026', date: 'Feb 1, 2026', amount: 99 },
-                  { period: 'January 2026', date: 'Jan 1, 2026', amount: 99 },
-                  { period: 'December 2025', date: 'Dec 1, 2025', amount: 99 },
-                ].map((invoice, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">Pro Plan — {invoice.period}</p>
-                      <p className="text-sm text-slate-500">{invoice.date}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <p className="font-semibold">${invoice.amount}.00</p>
-                      <Badge className="bg-green-100 text-green-700">Paid</Badge>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="payoutAmount">Amount</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="payoutAmount"
+                    type="number"
+                    className="pl-10"
+                    placeholder="Enter amount"
+                  />
+                </div>
               </div>
-              <Button variant="outline" className="w-full mt-4">
-                View All Invoices
+              <div>
+                <Label htmlFor="bankDetails">Bank Details</Label>
+                <Textarea
+                  id="bankDetails"
+                  rows={3}
+                  placeholder="Enter your bank account details..."
+                />
+              </div>
+              <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2]">
+                Submit Payout Request
               </Button>
             </CardContent>
           </Card>

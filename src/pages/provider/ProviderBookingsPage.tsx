@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Crown, Check, X, CheckCircle } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Crown, Check, X, CheckCircle, LogIn, LogOut, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProviderAuthStore } from '@/stores/providerAuthStore'
 import { apiClient } from '@/lib/apiClient'
@@ -43,11 +44,13 @@ type BookingRow = {
 }
 
 export function ProviderBookingsPage() {
-  const { currentServiceType, provider } = useProviderAuthStore()
+  const { provider } = useProviderAuthStore()
   const isVerified = provider?.isVerified ?? false
   const qc = useQueryClient()
 
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'checkedin' | 'checkedout'>('all')
+  const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null)
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false)
 
   const { data, isLoading, isError } = useQuery<ProviderBookingsResponse>({
     queryKey: ['provider-bookings', statusFilter],
@@ -58,7 +61,7 @@ export function ProviderBookingsPage() {
   })
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' }) =>
+    mutationFn: ({ id, status }: { id: string; status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'CHECKED_IN' | 'CHECKED_OUT' }) =>
       apiClient.patch(`/providers/bookings/${id}`, { status }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['provider-bookings'] })
@@ -98,13 +101,17 @@ export function ProviderBookingsPage() {
 
     const rawStatus = item.status.toLowerCase()
     const mappedStatus: ProviderBookingStatus =
-      rawStatus === 'completed'
-        ? 'checkedout'
-        : rawStatus === 'pending_payment'
-          ? 'pending'
-          : rawStatus === 'confirmed' || rawStatus === 'pending' || rawStatus === 'cancelled'
-            ? rawStatus
-            : 'pending'
+      rawStatus === 'checked_in'
+        ? 'checkedin'
+        : rawStatus === 'checked_out'
+          ? 'checkedout'
+          : rawStatus === 'completed'
+            ? 'checkedout'
+            : rawStatus === 'pending_payment'
+              ? 'pending'
+              : rawStatus === 'confirmed' || rawStatus === 'pending' || rawStatus === 'cancelled'
+                ? rawStatus
+                : 'pending'
 
     return {
       id: item.id,
@@ -145,7 +152,7 @@ export function ProviderBookingsPage() {
           <h1 className="text-2xl font-bold text-slate-900">Réservations</h1>
           <p className="text-slate-500 mt-1">Gérez vos réservations et leur statut</p>
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ProviderBookingStatus | 'all')}>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -231,24 +238,54 @@ export function ProviderBookingsPage() {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Voir les détails"
+                          onClick={() => {
+                            setSelectedBooking(booking)
+                            setShowDetailsDialog(true)
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         {booking.status === 'pending' && (
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="text-blue-600" 
-                            title={isVerified ? "Confirmer" : "Vérification requise"} 
-                            disabled={!isVerified || statusMutation.isPending} 
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-blue-600"
+                            title={isVerified ? "Confirmer" : "Vérification requise"}
+                            disabled={!isVerified || statusMutation.isPending}
                             onClick={() => statusMutation.mutate({ id: booking.id, status: 'CONFIRMED' })}
                           >
                             <Check className="h-4 w-4" />
                           </Button>
                         )}
                         {booking.status === 'confirmed' && (
-                          <Button size="sm" variant="ghost" className="text-green-600" title="Marquer comme terminée" disabled={statusMutation.isPending} onClick={() => statusMutation.mutate({ id: booking.id, status: 'COMPLETED' })}>
-                            <CheckCircle className="h-4 w-4" />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-green-600"
+                            title="Check-in"
+                            disabled={!isVerified || statusMutation.isPending}
+                            onClick={() => statusMutation.mutate({ id: booking.id, status: 'CHECKED_IN' })}
+                          >
+                            <LogIn className="h-4 w-4" />
                           </Button>
                         )}
-                        {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                        {booking.status === 'checkedin' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-purple-600"
+                            title="Check-out"
+                            disabled={statusMutation.isPending}
+                            onClick={() => statusMutation.mutate({ id: booking.id, status: 'CHECKED_OUT' })}
+                          >
+                            <LogOut className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {(booking.status === 'pending' || booking.status === 'confirmed' || booking.status === 'checkedin') && (
                           <Button size="sm" variant="ghost" className="text-red-600" title="Annuler" disabled={statusMutation.isPending} onClick={() => { if (confirm('Annuler cette réservation ?')) statusMutation.mutate({ id: booking.id, status: 'CANCELLED' }) }}>
                             <X className="h-4 w-4" />
                           </Button>
@@ -262,6 +299,74 @@ export function ProviderBookingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Booking Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Détails de la réservation</DialogTitle>
+            <DialogDescription>
+              Informations complètes sur la réservation
+            </DialogDescription>
+          </DialogHeader>
+          {selectedBooking && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-3 pb-4 border-b">
+                <Avatar>
+                  <AvatarFallback className="bg-[#44DBD4] text-white">
+                    {selectedBooking.guestInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    {selectedBooking.guestName}
+                    {selectedBooking.isVIP && <Crown className="h-4 w-4 text-[#FC960E]" />}
+                  </p>
+                  <p className="text-sm text-slate-500">{selectedBooking.serviceName}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-slate-500">Check-in</p>
+                  <p className="font-medium">{new Date(selectedBooking.checkIn).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Check-out</p>
+                  <p className="font-medium">{new Date(selectedBooking.checkOut).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Invités</p>
+                  <p className="font-medium">{selectedBooking.guests}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Statut</p>
+                  <Badge className={getStatusBadge(selectedBooking.status)}>
+                    {selectedBooking.status.charAt(0).toUpperCase() + selectedBooking.status.slice(1)}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-slate-500">Total</p>
+                  <p className="text-2xl font-bold">{formatPrice(selectedBooking.totalPrice, selectedBooking.currency)}</p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-slate-500 mb-2">ID de réservation</p>
+                <p className="text-xs font-mono bg-slate-100 p-2 rounded">{selectedBooking.id}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -127,8 +127,15 @@ export function useDeleteAdminUser() {
   })
 }
 
-export function useAdminFlights(params: { page: number; limit: number }) {
-  const query = new URLSearchParams({ page: String(params.page), limit: String(params.limit) }).toString()
+export function useAdminFlights(params: { page: number; limit: number; includeDuffel?: boolean; origin?: string; destination?: string; departDate?: string }) {
+  const query = new URLSearchParams({ 
+    page: String(params.page), 
+    limit: String(params.limit),
+    ...(params.includeDuffel !== undefined ? { includeDuffel: String(params.includeDuffel) } : {}),
+    ...(params.origin ? { origin: params.origin } : {}),
+    ...(params.destination ? { destination: params.destination } : {}),
+    ...(params.departDate ? { departDate: params.departDate } : {}),
+  }).toString()
   return useQuery<PaginatedResponse<AdminFlight>>({
     queryKey: ['admin-flights', params],
     queryFn: () => apiClient.get<PaginatedResponse<AdminFlight>>(`/admin/flights?${query}`),

@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DollarSign, Clock, TrendingUp, Receipt, Wallet } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DollarSign, Clock, TrendingUp, Receipt, Wallet, Eye } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { formatPrice } from '@/lib/formatters'
 
@@ -15,6 +16,12 @@ type ProviderEarningsResponse = {
     commissionFees: number
     currency: string
   }
+} | {
+  totalRevenue: number
+  pendingPayments: number
+  avgBookingValue: number
+  commissionFees: number
+  currency: string
 }
 
 type ProviderBookingsResponse = {
@@ -26,11 +33,25 @@ type ProviderBookingsResponse = {
     totalAmount: number
     currency: string
     status: string
+    metadata?: Record<string, unknown> | null
   }>
+}
+
+type EarningItem = {
+  id: string
+  serviceName: string
+  guestName: string
+  createdAt: string
+  totalAmount: number
+  currency: string
+  status: string
+  metadata?: Record<string, unknown> | null
 }
 
 export function ProviderEarningsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('this-month')
+  const [selectedEarning, setSelectedEarning] = useState<EarningItem | null>(null)
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false)
 
   const periods = [
     { id: 'this-month', label: 'This Month' },
@@ -49,7 +70,7 @@ export function ProviderEarningsPage() {
     queryFn: () => apiClient.get<ProviderBookingsResponse>('/providers/bookings?limit=20'),
   })
 
-  const totals = earningsQuery.data?.data
+  const totals = earningsQuery.data?.data ?? earningsQuery.data
   const currency = totals?.currency ?? 'XAF'
 
   return (
@@ -144,22 +165,23 @@ export function ProviderEarningsPage() {
                   <th className="text-right py-3 px-4 font-medium text-slate-600">Commission</th>
                   <th className="text-right py-3 px-4 font-medium text-slate-600">Net</th>
                   <th className="text-center py-3 px-4 font-medium text-slate-600">Status</th>
+                  <th className="text-center py-3 px-4 font-medium text-slate-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {breakdownQuery.isLoading && (
                   <tr>
-                    <td className="py-6 px-4 text-slate-500" colSpan={7}>Loading revenue breakdown...</td>
+                    <td className="py-6 px-4 text-slate-500" colSpan={8}>Loading revenue breakdown...</td>
                   </tr>
                 )}
                 {breakdownQuery.isError && (
                   <tr>
-                    <td className="py-6 px-4 text-red-600" colSpan={7}>Failed to load revenue breakdown</td>
+                    <td className="py-6 px-4 text-red-600" colSpan={8}>Failed to load revenue breakdown</td>
                   </tr>
                 )}
                 {!breakdownQuery.isLoading && !breakdownQuery.isError && (breakdownQuery.data?.items?.length ?? 0) === 0 && (
                   <tr>
-                    <td className="py-6 px-4 text-slate-500" colSpan={7}>No booking revenue yet</td>
+                    <td className="py-6 px-4 text-slate-500" colSpan={8}>No booking revenue yet</td>
                   </tr>
                 )}
                 {(breakdownQuery.data?.items ?? []).map((item) => {
@@ -182,6 +204,19 @@ export function ProviderEarningsPage() {
                           {paid ? 'paid' : 'pending'}
                         </Badge>
                       </td>
+                      <td className="py-3 px-4 text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Voir les détails"
+                          onClick={() => {
+                            setSelectedEarning(item)
+                            setShowDetailsDialog(true)
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </td>
                     </tr>
                   )
                 })}
@@ -190,6 +225,73 @@ export function ProviderEarningsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Earning Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Détails du revenu</DialogTitle>
+            <DialogDescription>
+              Informations complètes sur cette transaction
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEarning && (
+            <div className="space-y-4 py-4">
+              <div className="pb-4 border-b">
+                <p className="text-sm text-slate-500">Service</p>
+                <p className="font-medium">{selectedEarning.serviceName}</p>
+              </div>
+
+              <div className="pb-4 border-b">
+                <p className="text-sm text-slate-500">Client</p>
+                <p className="font-medium">{selectedEarning.guestName}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pb-4 border-b">
+                <div>
+                  <p className="text-sm text-slate-500">Date</p>
+                  <p className="font-medium">{new Date(selectedEarning.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Statut</p>
+                  <Badge className={
+                    (selectedEarning.status.toLowerCase() === 'confirmed' || selectedEarning.status.toLowerCase() === 'completed')
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }>
+                    {selectedEarning.status.toLowerCase() === 'confirmed' || selectedEarning.status.toLowerCase() === 'completed' ? 'paid' : 'pending'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2 pb-4 border-b">
+                <div className="flex justify-between">
+                  <p className="text-sm text-slate-500">Montant total</p>
+                  <p className="font-medium">{formatPrice(selectedEarning.totalAmount, selectedEarning.currency || currency)}</p>
+                </div>
+                <div className="flex justify-between text-red-600">
+                  <p className="text-sm">Commission (10%)</p>
+                  <p className="font-medium">-{formatPrice(selectedEarning.totalAmount * 0.1, selectedEarning.currency || currency)}</p>
+                </div>
+                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                  <p>Net</p>
+                  <p>{formatPrice(selectedEarning.totalAmount * 0.9, selectedEarning.currency || currency)}</p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-slate-500 mb-2">ID de transaction</p>
+                <p className="text-xs font-mono bg-slate-100 p-2 rounded">{selectedEarning.id}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

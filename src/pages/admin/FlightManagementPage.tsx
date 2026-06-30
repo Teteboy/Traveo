@@ -91,9 +91,22 @@ export function FlightManagementPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isExporting, setIsExporting] = useState(false)
 
+  // Duffel search state
+  const [includeDuffel, setIncludeDuffel] = useState(false)
+  const [duffelOrigin, setDuffelOrigin] = useState('')
+  const [duffelDestination, setDuffelDestination] = useState('')
+  const [duffelDepartDate, setDuffelDepartDate] = useState('')
+
   const [form, setForm] = useState<FlightForm>(defaultForm)
 
-  const flightsQuery = useAdminFlights({ page: currentPage, limit: pageSize })
+  const flightsQuery = useAdminFlights({ 
+    page: currentPage, 
+    limit: pageSize,
+    includeDuffel,
+    origin: includeDuffel ? duffelOrigin : undefined,
+    destination: includeDuffel ? duffelDestination : undefined,
+    departDate: includeDuffel ? duffelDepartDate : undefined,
+  })
   const statsQuery = useAdminStats()
   const createMutation = useCreateAdminFlight()
   const updateMutation = useUpdateAdminFlight()
@@ -298,7 +311,7 @@ export function FlightManagementPage() {
       {activeTab === 'flights' && (
         <>
           <Card className="border-slate-200">
-            <CardContent className="p-4">
+            <CardContent className="p-4 space-y-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
@@ -310,6 +323,52 @@ export function FlightManagementPage() {
                     setSearchQuery(e.target.value)
                   }}
                 />
+              </div>
+              
+              {/* Duffel Search Controls */}
+              <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includeDuffel}
+                    onChange={(e) => {
+                      setIncludeDuffel(e.target.checked)
+                      setCurrentPage(1)
+                    }}
+                    className="rounded border-slate-300"
+                  />
+                  <span className="text-sm font-medium text-slate-700">Inclure Duffel API</span>
+                </label>
+                
+                {includeDuffel && (
+                  <div className="flex items-center gap-2 flex-1">
+                    <Input
+                      placeholder="Origine (ex: JFK)"
+                      className="border-slate-200 flex-1"
+                      value={duffelOrigin}
+                      onChange={(e) => setDuffelOrigin(e.target.value.toUpperCase())}
+                    />
+                    <Input
+                      placeholder="Destination (ex: LHR)"
+                      className="border-slate-200 flex-1"
+                      value={duffelDestination}
+                      onChange={(e) => setDuffelDestination(e.target.value.toUpperCase())}
+                    />
+                    <Input
+                      type="date"
+                      className="border-slate-200 w-40"
+                      value={duffelDepartDate}
+                      onChange={(e) => setDuffelDepartDate(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={!duffelOrigin || !duffelDestination || !duffelDepartDate}
+                      className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
+                    >
+                      Rechercher
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -325,7 +384,7 @@ export function FlightManagementPage() {
                       <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Départ</th>
                       <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Prix éco</th>
                       <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Sièges</th>
-                      <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Statut</th>
+                      <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Source</th>
                       <th className="text-right px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
@@ -359,8 +418,8 @@ export function FlightManagementPage() {
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-600">{flight.availableSeats}</td>
                         <td className="px-6 py-4">
-                          <Badge className={flight.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}>
-                            {flight.isActive ? 'Actif' : 'Inactif'}
+                          <Badge className={(flight as any).isDuffel ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}>
+                            {(flight as any).isDuffel ? 'Duffel' : 'Local'}
                           </Badge>
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -372,13 +431,17 @@ export function FlightManagementPage() {
                               <DropdownMenuItem onClick={() => { setSelectedId(flight.id); setShowDetailSheet(true) }}>
                                 Voir détails
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => openEdit(flight.id)}>
-                                <Edit className="h-4 w-4 mr-2" />Modifier
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600" onClick={() => { setSelectedId(flight.id); setShowDeleteDialog(true) }}>
-                                <Trash2 className="h-4 w-4 mr-2" />Désactiver
-                              </DropdownMenuItem>
+                              {!(flight as any).isDuffel && (
+                                <>
+                                  <DropdownMenuItem onClick={() => openEdit(flight.id)}>
+                                    <Edit className="h-4 w-4 mr-2" />Modifier
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="text-red-600" onClick={() => { setSelectedId(flight.id); setShowDeleteDialog(true) }}>
+                                    <Trash2 className="h-4 w-4 mr-2" />Désactiver
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>

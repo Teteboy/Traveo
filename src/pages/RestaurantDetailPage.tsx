@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapPin, Star, Clock, Users, ArrowLeft, Share2, Heart, Calendar, Phone, Mail, MessageSquare } from 'lucide-react'
+import { MapPin, Star, Clock, Users, ArrowLeft, Share2, Heart, Calendar, Phone, Mail, UtensilsCrossed } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,12 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatPrice } from '@/lib/formatters'
 import { useRestaurant, useBookRestaurant } from '@/hooks/useServices'
 import { usePayWithWallet } from '@/hooks/useWallet'
+import { useMenuItems } from '@/hooks/useServiceItems'
 import { adaptRestaurant } from '@/lib/adapters'
 import type { ApiServiceItem } from '@/lib/adapters'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { useState } from 'react'
-import { apiClient } from '@/lib/apiClient'
 
 export function RestaurantDetailPage() {
   const { restaurantId } = useParams()
@@ -25,6 +25,8 @@ export function RestaurantDetailPage() {
   const payWithWallet = usePayWithWallet()
   const { data: restaurantData, isLoading } = useRestaurant(restaurantId ?? '')
   const restaurant = restaurantData ? adaptRestaurant(restaurantData as unknown as ApiServiceItem) : null
+  const { data: menuItemsData, isLoading: menuLoading } = useMenuItems(restaurantId)
+  const menuItems = menuItemsData ?? []
 
   const handleBook = async () => {
     if (!restaurant) return
@@ -221,28 +223,60 @@ export function RestaurantDetailPage() {
                 <CardTitle>Menu</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {[
-                    { name: 'Entrées', items: ['Salade César', 'Carpaccio de bœuf', 'Soupe du jour'] },
-                    { name: 'Plats', items: ['Steak frites', 'Poisson du jour', 'Risotto aux champignons'] },
-                    { name: 'Desserts', items: ['Tarte tatin', 'Crème brûlée', 'Fondant au chocolat'] }
-                  ].map((section) => (
-                    <div key={section.name} className="border-b last:border-0 pb-3 last:pb-0">
-                      <h4 className="font-semibold mb-2">{section.name}</h4>
-                      <ul className="space-y-1">
-                        {section.items.map((item) => (
-                          <li key={item} className="text-sm text-muted-foreground flex items-center gap-2">
-                            <div className="h-1 w-1 rounded-full bg-muted-foreground" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-                <Button variant="outline" className="w-full">
-                  Voir le menu complet
-                </Button>
+                {menuLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
+                ) : menuItems.length === 0 ? (
+                  <p className="text-muted-foreground">Aucun article de menu disponible pour le moment.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {menuItems.map((item) => (
+                      <div key={item.id} className="flex gap-4 p-3 bg-muted/30 rounded-lg">
+                        {item.imageUrl && (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-20 h-20 object-cover rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-1">
+                            <h4 className="font-semibold">{item.name}</h4>
+                            <div className="text-lg font-bold text-[#FC960E]">
+                              {formatPrice(item.price, item.currency)}
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="text-xs mb-2">
+                            {item.cuisine}
+                          </Badge>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {item.description}
+                            </p>
+                          )}
+                          {item.preparationTime && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                              <Clock className="h-3 w-3" />
+                              <span>{item.preparationTime} min</span>
+                            </div>
+                          )}
+                          {item.dietary && item.dietary.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {item.dietary.map((diet) => (
+                                <Badge key={diet} variant="outline" className="text-xs">
+                                  {diet}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

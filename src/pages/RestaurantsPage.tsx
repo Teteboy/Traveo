@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, MapPin, Star, Euro, SlidersHorizontal, Users, CheckCircle, Loader2, Filter, DollarSign, Utensils } from 'lucide-react'
+import { Search, MapPin, Star, Euro, SlidersHorizontal, Users, CheckCircle, Loader2, Filter, DollarSign, Utensils, UtensilsCrossed } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,7 @@ import { formatPrice } from '@/lib/formatters'
 import { useRestaurants, useBookRestaurant } from '@/hooks/useServices'
 import { adaptRestaurant } from '@/lib/adapters'
 import { toast } from 'sonner'
+import { useQueries } from '@tanstack/react-query'
 
 const priceRanges = [
   { value: 'all', label: 'Tous les prix' },
@@ -168,6 +169,22 @@ export function RestaurantsPage() {
         default: return 0
       }
     })
+
+  // Fetch menu items for each restaurant using useQueries
+  const restaurantIds = filteredRestaurants.map(r => r.id)
+  const menuItemsQueries = useQueries({
+    queries: restaurantIds.map(id => ({
+      queryKey: ['menu-items', id],
+      queryFn: async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/service-items/restaurants/${id}/menu-items`)
+        const data = await response.json()
+        return data.data || data
+      },
+      enabled: !!id,
+      staleTime: 5 * 60 * 1000,
+    }))
+  })
+  const menuItemsCountMap = new Map(restaurantIds.map((id, i) => [id, (menuItemsQueries[i].data ?? []).length]))
 
   const handleApplyFilters = () => {
     setAppliedFilters({ ...filters })
@@ -330,6 +347,10 @@ export function RestaurantsPage() {
                       <div className="text-2xl font-bold text-[#44DBD4] flex items-center gap-1">
                         <Euro className="h-5 w-5" />
                         {formatPrice(restaurant.averagePrice, restaurant.currency)}
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                        <UtensilsCrossed className="h-3 w-3" />
+                        <span>{menuItemsCountMap.get(restaurant.id) || 0} articles</span>
                       </div>
                     </div>
                     <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" onClick={(e) => handleOpenReservation(restaurant, e)}>

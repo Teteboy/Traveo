@@ -39,8 +39,8 @@ export const useProviderAuthStore = create<ProviderAuthState>()(
            // Fetch provider profile
            let providerData: { id: string; companyName: string; businessType: string; isVerified: boolean; verificationProgress: number } | undefined
             try {
-              const provRes = await apiClient.get<{ data: { id: string; companyName: string; businessType: string; isVerified: boolean; verificationProgress: number } }>('/providers/me')
-              providerData = provRes.data.data
+              const provRes = await apiClient.get<any>('/providers/me')
+              providerData = provRes.data?.data || provRes.data
             } catch { /* provider profile may not exist yet */ }
 
            const profile: ProviderProfile = {

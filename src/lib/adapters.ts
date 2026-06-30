@@ -71,6 +71,7 @@ export interface ApiServiceItem {
   price: number
   currency: string
   metadata: Record<string, unknown>
+  providerId?: string
 }
 
 export function adaptHotel(s: ApiServiceItem): Hotel & { starRating: number; availableRooms: number; providerId?: string } {

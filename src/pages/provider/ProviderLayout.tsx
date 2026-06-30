@@ -5,6 +5,7 @@ import {
   Briefcase,
   Calendar,
   BarChart3,
+  Wallet,
   Star,
   MessageSquare,
   CheckCircle,
@@ -51,6 +52,7 @@ const navigationItems = [
       { id: 'services', label: 'Services', icon: Briefcase, path: '/provider/services' },
       { id: 'bookings', label: 'Bookings', icon: Calendar, path: '/provider/bookings' },
       { id: 'earnings', label: 'Earnings', icon: BarChart3, path: '/provider/earnings' },
+      { id: 'payouts', label: 'Payouts', icon: Wallet, path: '/provider/payouts' },
     ],
   },
   {

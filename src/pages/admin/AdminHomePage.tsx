@@ -112,7 +112,7 @@ export function AdminHomePage() {
     setLoadingProviders(true)
     try {
       const res = await apiClient.get('/admin/providers?status=pending')
-      setPendingProviders(res.data?.data?.providers || [])
+      setPendingProviders((res as any).data?.data?.providers || [])
     } catch (e) {
       setPendingProviders([])
     } finally {

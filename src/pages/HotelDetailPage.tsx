@@ -12,13 +12,9 @@ import {
   MapPin,
   Calendar,
   Users,
-  Clock,
   Wifi,
   Car,
   Coffee,
-  UtensilsCrossed,
-  Dumbbell,
-  Waves,
   ArrowLeft,
   MessageSquare,
 } from 'lucide-react'

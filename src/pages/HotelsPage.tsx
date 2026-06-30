@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Hotel, Star, MapPin, Wifi, SlidersHorizontal, Heart } from 'lucide-react'
+import { Search, Hotel, Star, MapPin, Wifi, SlidersHorizontal, Heart, Bed } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,9 @@ import { DateRangePicker } from '@/components/ui/date-picker'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet'
 import { formatPrice } from '@/lib/formatters'
 import { useHotels, useDuffelHotels } from '@/hooks/useServices'
+import { useHotelRooms } from '@/hooks/useServiceItems'
 import { adaptHotel } from '@/lib/adapters'
+import { useQueries } from '@tanstack/react-query'
 
 const sortOptions = [
   { value: 'recommended', label: 'Recommandés' },
@@ -60,6 +62,22 @@ export function HotelsPage() {
       if (filters.sortBy === 'rating_desc') return b.rating - a.rating
       return 0
     })
+
+  // Fetch rooms for each hotel using useQueries
+  const hotelIds = hotels.map(h => h.id)
+  const roomsQueries = useQueries({
+    queries: hotelIds.map(id => ({
+      queryKey: ['hotel-rooms', id],
+      queryFn: async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/service-items/hotels/${id}/rooms`)
+        const data = await response.json()
+        return data.data || data
+      },
+      enabled: !!id,
+      staleTime: 5 * 60 * 1000,
+    }))
+  })
+  const roomsCountMap = new Map(hotelIds.map((id, i) => [id, (roomsQueries[i].data ?? []).length]))
 
   const toggleSave = (id: string) => {
     setSavedHotels(prev => {
@@ -217,6 +235,10 @@ export function HotelsPage() {
                             <div className="text-sm text-muted-foreground mb-1">À partir de</div>
                             <div className="text-3xl font-bold text-[#44DBD4]">{formatPrice(hotel.price, hotel.currency)}</div>
                             <div className="text-xs text-muted-foreground">par nuit</div>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Bed className="h-4 w-4" />
+                            <span>{roomsCountMap.get(hotel.id) || 0} chambres</span>
                           </div>
                           <Button className="w-full bg-[#44DBD4] hover:bg-[#3bc9c2] text-white">Voir les chambres</Button>
                         </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, MapPin, Star, Languages, Award, Clock, Calendar, Users, CheckCircle, Loader2, CreditCard } from 'lucide-react'
+import { Search, MapPin, Star, Languages, Award, Clock, Calendar, Users, CheckCircle, Loader2, CreditCard, Mountain } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -10,11 +10,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-// Sheet removed - not used in GuidesPage
 import { formatPrice } from '@/lib/formatters'
 import { useGuides, useBookGuide } from '@/hooks/useServices'
 import { adaptGuide } from '@/lib/adapters'
 import { toast } from 'sonner'
+import { useQueries } from '@tanstack/react-query'
 
 const sortOptions = [
   { value: 'rating', label: 'Mieux notés' },
@@ -41,6 +41,22 @@ export function GuidesPage() {
       if (sortBy === 'price_desc') return b.pricePerHour - a.pricePerHour
       return b.rating - a.rating
     })
+
+  // Fetch tours for each guide using useQueries
+  const guideIds = guides.map(g => g.id)
+  const toursQueries = useQueries({
+    queries: guideIds.map(id => ({
+      queryKey: ['tours', id],
+      queryFn: async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/service-items/guides/${id}/tours`)
+        const data = await response.json()
+        return data.data || data
+      },
+      enabled: !!id,
+      staleTime: 5 * 60 * 1000,
+    }))
+  })
+  const toursCountMap = new Map(guideIds.map((id, i) => [id, (toursQueries[i].data ?? []).length]))
 
   const handleOpenBooking = (guide: ReturnType<typeof adaptGuide>, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -165,6 +181,10 @@ export function GuidesPage() {
                       <div>
                         <div className="text-2xl font-bold text-[#44DBD4]">{formatPrice(guide.pricePerHour, guide.currency)}</div>
                         <div className="text-xs text-slate-500 flex items-center gap-1"><Clock className="h-3 w-3" /> par heure</div>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-slate-500">
+                        <Mountain className="h-4 w-4" />
+                        <span>{toursCountMap.get(guide.id) || 0} visites</span>
                       </div>
                     </div>
                     <Button className="w-full bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"

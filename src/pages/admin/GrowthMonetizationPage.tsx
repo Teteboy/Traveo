@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAdminAnalytics } from '@/hooks/useAdmin'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Megaphone,
   Search,
@@ -21,11 +21,14 @@ import {
   Gift,
   Target,
   BarChart3,
+  Loader2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,180 +43,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { apiClient } from '@/lib/apiClient'
+import { toast } from 'sonner'
 
-// Mock sponsored content
-const mockSponsoredContent = [
-  {
-    id: '1',
-    title: 'Découvrez Tokyo - Guide Premium',
-    type: 'article',
-    sponsor: 'Japan Tourism Board',
-    sponsorId: 'SPN001',
-    placement: 'home_hero',
-    status: 'active',
-    startDate: '2024-02-01',
-    endDate: '2024-03-31',
-    impressions: 125000,
-    clicks: 4500,
-    ctr: 3.6,
-    cost: 5000,
-    budget: 10000,
-  },
-  {
-    id: '2',
-    title: 'Offre Spéciale Emirates - Paris Dubai',
-    type: 'banner',
-    sponsor: 'Emirates Airlines',
-    sponsorId: 'SPN002',
-    placement: 'flights_sidebar',
-    status: 'active',
-    startDate: '2024-02-15',
-    endDate: '2024-04-15',
-    impressions: 85000,
-    clicks: 2100,
-    ctr: 2.5,
-    cost: 3500,
-    budget: 8000,
-  },
-  {
-    id: '3',
-    title: 'Festival Hanami 2024',
-    type: 'video',
-    sponsor: 'Kyoto Tourism',
-    sponsorId: 'SPN003',
-    placement: 'discover_feed',
-    status: 'pending',
-    startDate: '2024-03-01',
-    endDate: '2024-04-30',
-    impressions: 0,
-    clicks: 0,
-    ctr: 0,
-    cost: 0,
-    budget: 12000,
-  },
-  {
-    id: '4',
-    title: 'Hôtel Grand Palace Paris',
-    type: 'featured',
-    sponsor: 'Grand Palace Hotels',
-    sponsorId: 'SPN004',
-    placement: 'hotels_top',
-    status: 'active',
-    startDate: '2024-01-15',
-    endDate: '2024-02-28',
-    impressions: 45000,
-    clicks: 890,
-    ctr: 2.0,
-    cost: 2200,
-    budget: 5000,
-  },
-]
+type SponsoredContent = {
+  id: string
+  title: string
+  type: string
+  sponsor: string
+  sponsorId: string
+  placement: string
+  status: string
+  startDate: string
+  endDate: string
+  impressions: number
+  clicks: number
+  budget: number
+  cost: number
+  imageUrl?: string
+  videoUrl?: string
+  contentUrl?: string
+}
 
-const mockPartnerships = [
-  {
-    id: '1',
-    name: 'Japan Airlines',
-    type: 'airline',
-    status: 'active',
-    tier: 'premium',
-    revenue: 125000,
-    bookings: 4500,
-    commission: 5.5,
-    startDate: '2023-01-01',
-    contractEnd: '2025-12-31',
-    benefits: ['Commission réduite', 'API prioritaire', 'Support dédié'],
-  },
-  {
-    id: '2',
-    name: 'Marriott International',
-    type: 'hotel_chain',
-    status: 'active',
-    tier: 'premium',
-    revenue: 89000,
-    bookings: 2100,
-    commission: 12,
-    startDate: '2023-03-15',
-    contractEnd: '2025-03-14',
-    benefits: ['Tarifs préférentiels', 'Programme fidélité', 'Support dédié'],
-  },
-  {
-    id: '3',
-    name: 'Tokyo Metro',
-    type: 'transport',
-    status: 'active',
-    tier: 'standard',
-    revenue: 15000,
-    bookings: 8500,
-    commission: 8,
-    startDate: '2023-06-01',
-    contractEnd: '2024-05-31',
-    benefits: ['Intégration billets', 'Promotions communes'],
-  },
-  {
-    id: '4',
-    name: 'GetYourGuide',
-    type: 'activities',
-    status: 'pending',
-    tier: 'standard',
-    revenue: 0,
-    bookings: 0,
-    commission: 15,
-    startDate: null,
-    contractEnd: null,
-    benefits: ['Catalogue activités', 'API intégration'],
-  },
-]
+type Partnership = {
+  id: string
+  name: string
+  type: string
+  status: string
+  tier: string
+  revenue: number
+  bookings: number
+  commission: number
+  startDate?: string
+  contractEnd?: string
+  benefits: string[]
+  contactEmail?: string
+  contactPhone?: string
+  logoUrl?: string
+}
 
-const mockPromotions = [
-  {
-    id: '1',
-    code: 'TOKYO2024',
-    description: '20% sur les vols vers Tokyo',
-    discount: 20,
-    discountType: 'percentage',
-    minPurchase: 500,
-    maxDiscount: 100,
-    usageLimit: 1000,
-    usedCount: 456,
-    startDate: '2024-02-01',
-    endDate: '2024-03-31',
-    status: 'active',
-    applicableTo: ['flights'],
-  },
-  {
-    id: '2',
-    code: 'HOTEL50',
-    description: '50¥ de réduction sur les hôtels',
-    discount: 50,
-    discountType: 'fixed',
-    minPurchase: 200,
-    maxDiscount: 50,
-    usageLimit: 500,
-    usedCount: 500,
-    startDate: '2024-01-15',
-    endDate: '2024-02-15',
-    status: 'expired',
-    applicableTo: ['hotels'],
-  },
-  {
-    id: '3',
-    code: 'NEWUSER',
-    description: 'Bienvenue - 15% première réservation',
-    discount: 15,
-    discountType: 'percentage',
-    minPurchase: 100,
-    maxDiscount: 50,
-    usageLimit: null,
-    usedCount: 2340,
-    startDate: '2023-01-01',
-    endDate: null,
-    status: 'active',
-    applicableTo: ['flights', 'hotels', 'events', 'guides'],
-  },
-]
+type Promotion = {
+  id: string
+  code: string
+  description: string
+  discount: number
+  discountType: string
+  minPurchase: number
+  maxDiscount?: number
+  usageLimit?: number
+  usedCount: number
+  startDate: string
+  endDate?: string
+  status: string
+  applicableTo: string[]
+}
+
+type PaginatedResponse<T> = {
+  page: number
+  limit: number
+  total: number
+  items: T[]
+}
 
 const contentTypeConfig = {
   article: { label: 'Article', color: 'bg-blue-100 text-blue-700', icon: FileText },
@@ -222,19 +115,27 @@ const contentTypeConfig = {
   featured: { label: 'Mis en avant', color: 'bg-orange-100 text-orange-700', icon: Star },
 }
 
-const statusConfig = {
-  active: { label: 'Actif', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+  draft: { label: 'Brouillon', color: 'bg-slate-100 text-slate-600', icon: Clock },
   pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
+  active: { label: 'Actif', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+  paused: { label: 'En pause', color: 'bg-orange-100 text-orange-700', icon: Clock },
+  completed: { label: 'Terminé', color: 'bg-blue-100 text-blue-700', icon: CheckCircle },
   expired: { label: 'Expiré', color: 'bg-slate-100 text-slate-600', icon: XCircle },
+  disabled: { label: 'Désactivé', color: 'bg-slate-100 text-slate-600', icon: XCircle },
+  investigating: { label: 'En investigation', color: 'bg-blue-100 text-blue-700', icon: Clock },
+  resolved: { label: 'Résolu', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+  escalated: { label: 'Escaladé', color: 'bg-red-100 text-red-700', icon: XCircle },
 }
 
 export function GrowthMonetizationPage() {
-  const analyticsQuery = useAdminAnalytics()
-  const analytics = analyticsQuery.data?.data
-
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedContent, setSelectedContent] = useState<typeof mockSponsoredContent[0] | null>(null)
+  const [selectedContent, setSelectedContent] = useState<SponsoredContent | null>(null)
   const [showContentDetails, setShowContentDetails] = useState(false)
+  const [showAddContent, setShowAddContent] = useState(false)
+  const [showAddPartnership, setShowAddPartnership] = useState(false)
+  const [showAddPromotion, setShowAddPromotion] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [activeTab, setActiveTab] = useState<'sponsored' | 'partnerships' | 'promotions'>('sponsored')
@@ -243,32 +144,204 @@ export function GrowthMonetizationPage() {
     type: 'all',
   })
 
-  const filteredContent = mockSponsoredContent.filter(content => {
-    const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      content.sponsor.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = filters.status === 'all' || content.status === filters.status
-    const matchesType = filters.type === 'all' || content.type === filters.type
-    return matchesSearch && matchesStatus && matchesType
+  const [contentForm, setContentForm] = useState({
+    title: '',
+    type: 'banner' as 'article' | 'banner' | 'video' | 'featured',
+    sponsor: '',
+    sponsorId: '',
+    placement: 'homepage',
+    status: 'draft' as 'draft' | 'pending' | 'active' | 'paused',
+    startDate: '',
+    endDate: '',
+    budget: 0,
+    imageUrl: '',
+    videoUrl: '',
+    contentUrl: '',
   })
 
-  const totalPages = Math.ceil(filteredContent.length / pageSize)
-  const paginatedContent = filteredContent.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  )
+  const [partnershipForm, setPartnershipForm] = useState({
+    name: '',
+    type: 'affiliate' as 'affiliate' | 'corporate' | 'strategic',
+    status: 'pending' as 'pending' | 'active' | 'suspended',
+    tier: 'bronze' as 'bronze' | 'silver' | 'gold' | 'platinum',
+    revenue: 0,
+    commission: 10,
+    contactEmail: '',
+    contactPhone: '',
+    benefits: [] as string[],
+  })
 
-  const handleViewContent = (content: typeof mockSponsoredContent[0]) => {
+  const [promotionForm, setPromotionForm] = useState({
+    code: '',
+    description: '',
+    discount: 0,
+    discountType: 'percentage' as 'percentage' | 'fixed',
+    minPurchase: 0,
+    maxDiscount: 0,
+    usageLimit: 100,
+    startDate: '',
+    endDate: '',
+    status: 'draft' as 'draft' | 'active' | 'expired' | 'disabled',
+    applicableTo: [] as string[],
+  })
+
+  // Sponsored content query
+  const { data: sponsoredData, isLoading: sponsoredLoading } = useQuery<PaginatedResponse<SponsoredContent>>({
+    queryKey: ['admin-sponsored-content', currentPage, pageSize, filters.status, filters.type, searchQuery],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(pageSize),
+        ...(filters.status !== 'all' && { status: filters.status }),
+        ...(filters.type !== 'all' && { type: filters.type }),
+        ...(searchQuery && { search: searchQuery }),
+      })
+      return apiClient.get(`/admin/sponsored-content?${params}`)
+    },
+    staleTime: 30000,
+  })
+
+  // Partnerships query
+  const { data: partnershipsData, isLoading: partnershipsLoading } = useQuery<PaginatedResponse<Partnership>>({
+    queryKey: ['admin-partnerships', currentPage, pageSize, filters.status, filters.type, searchQuery],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(pageSize),
+        ...(filters.status !== 'all' && { status: filters.status }),
+        ...(filters.type !== 'all' && { type: filters.type }),
+        ...(searchQuery && { search: searchQuery }),
+      })
+      return apiClient.get(`/admin/partnerships?${params}`)
+    },
+    staleTime: 30000,
+  })
+
+  // Promotions query
+  const { data: promotionsData, isLoading: promotionsLoading } = useQuery<PaginatedResponse<Promotion>>({
+    queryKey: ['admin-promotions', currentPage, pageSize, filters.status, searchQuery],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(pageSize),
+        ...(filters.status !== 'all' && { status: filters.status }),
+        ...(searchQuery && { search: searchQuery }),
+      })
+      return apiClient.get(`/admin/promotions?${params}`)
+    },
+    staleTime: 30000,
+  })
+
+  // Delete mutations
+  const deleteSponsoredMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/admin/sponsored-content/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-sponsored-content'] }),
+  })
+
+  const deletePartnershipMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/admin/partnerships/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-partnerships'] }),
+  })
+
+  const deletePromotionMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/admin/promotions/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-promotions'] }),
+  })
+
+  // Create mutations
+  const createSponsoredMutation = useMutation({
+    mutationFn: (data: typeof contentForm) => apiClient.post('/admin/sponsored-content', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-sponsored-content'] })
+      setShowAddContent(false)
+      setContentForm({
+        title: '',
+        type: 'banner',
+        sponsor: '',
+        sponsorId: '',
+        placement: 'homepage',
+        status: 'draft',
+        startDate: '',
+        endDate: '',
+        budget: 0,
+        imageUrl: '',
+        videoUrl: '',
+        contentUrl: '',
+      })
+      toast.success('Contenu sponsorisé créé avec succès')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erreur lors de la création')
+    },
+  })
+
+  const createPartnershipMutation = useMutation({
+    mutationFn: (data: typeof partnershipForm) => apiClient.post('/admin/partnerships', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-partnerships'] })
+      setShowAddPartnership(false)
+      setPartnershipForm({
+        name: '',
+        type: 'affiliate',
+        status: 'pending',
+        tier: 'bronze',
+        revenue: 0,
+        commission: 10,
+        contactEmail: '',
+        contactPhone: '',
+        benefits: [],
+      })
+      toast.success('Partenariat créé avec succès')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erreur lors de la création')
+    },
+  })
+
+  const createPromotionMutation = useMutation({
+    mutationFn: (data: typeof promotionForm) => apiClient.post('/admin/promotions', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-promotions'] })
+      setShowAddPromotion(false)
+      setPromotionForm({
+        code: '',
+        description: '',
+        discount: 0,
+        discountType: 'percentage',
+        minPurchase: 0,
+        maxDiscount: 0,
+        usageLimit: 100,
+        startDate: '',
+        endDate: '',
+        status: 'draft',
+        applicableTo: [],
+      })
+      toast.success('Promotion créée avec succès')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erreur lors de la création')
+    },
+  })
+
+  const sponsoredContent = sponsoredData?.items || []
+  const partnerships = partnershipsData?.items || []
+  const promotions = promotionsData?.items || []
+  const total = activeTab === 'sponsored' ? sponsoredData?.total || 0 : activeTab === 'partnerships' ? partnershipsData?.total || 0 : promotionsData?.total || 0
+  const totalPages = Math.ceil(total / pageSize)
+  const isLoading = activeTab === 'sponsored' ? sponsoredLoading : activeTab === 'partnerships' ? partnershipsLoading : promotionsLoading
+
+  const handleViewContent = (content: SponsoredContent) => {
     setSelectedContent(content)
     setShowContentDetails(true)
   }
 
   const stats = {
-    activeCampaigns: mockSponsoredContent.filter(c => c.status === 'active').length,
-    totalImpressions: mockSponsoredContent.reduce((sum, c) => sum + c.impressions, 0),
-    totalClicks: mockSponsoredContent.reduce((sum, c) => sum + c.clicks, 0),
-    totalRevenue: mockSponsoredContent.reduce((sum, c) => sum + c.cost, 0),
-    activePartners: mockPartnerships.filter(p => p.status === 'active').length,
-    activePromos: mockPromotions.filter(p => p.status === 'active').length,
+    activeCampaigns: sponsoredContent.filter(c => c.status === 'active').length,
+    totalImpressions: sponsoredContent.reduce((sum, c) => sum + c.impressions, 0),
+    totalClicks: sponsoredContent.reduce((sum, c) => sum + c.clicks, 0),
+    totalRevenue: sponsoredContent.reduce((sum, c) => sum + c.cost, 0),
+    activePartners: partnerships.filter(p => p.status === 'active').length,
+    activePromos: promotions.filter(p => p.status === 'active').length,
   }
 
   return (
@@ -284,9 +357,13 @@ export function GrowthMonetizationPage() {
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white">
+          <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" onClick={() => {
+            if (activeTab === 'sponsored') setShowAddContent(true)
+            else if (activeTab === 'partnerships') setShowAddPartnership(true)
+            else if (activeTab === 'promotions') setShowAddPromotion(true)
+          }}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle campagne
+            {activeTab === 'sponsored' ? 'Nouveau contenu' : activeTab === 'partnerships' ? 'Nouveau partenariat' : 'Nouvelle promotion'}
           </Button>
         </div>
       </div>
@@ -468,7 +545,19 @@ export function GrowthMonetizationPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {paginatedContent.map((content) => {
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-8 text-center">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />
+                      </td>
+                    </tr>
+                  ) : sponsoredContent.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
+                        Aucun contenu sponsorisé
+                      </td>
+                    </tr>
+                  ) : sponsoredContent.map((content) => {
                     const typeInfo = contentTypeConfig[content.type as keyof typeof contentTypeConfig]
                     const statusInfo = statusConfig[content.status as keyof typeof statusConfig]
                     const TypeIcon = typeInfo.icon
@@ -519,7 +608,10 @@ export function GrowthMonetizationPage() {
                                 Modifier
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => deleteSponsoredMutation.mutate(content.id)}
+                              >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Supprimer
                               </DropdownMenuItem>
@@ -533,13 +625,13 @@ export function GrowthMonetizationPage() {
               </table>
             </div>
             
-            {filteredContent.length > pageSize && (
+            {total > pageSize && (
               <div className="border-t border-slate-200 p-4">
                 <PaginationControls
                   currentPage={currentPage}
                   totalPages={totalPages}
                   pageSize={pageSize}
-                  totalItems={filteredContent.length}
+                  totalItems={total}
                   onPageChange={setCurrentPage}
                   onPageSizeChange={setPageSize}
                   pageSizeOptions={[10, 25, 50]}
@@ -553,7 +645,15 @@ export function GrowthMonetizationPage() {
       {/* Partnerships Tab */}
       {activeTab === 'partnerships' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockPartnerships.map((partner) => (
+          {isLoading ? (
+            <div className="col-span-2 flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            </div>
+          ) : partnerships.length === 0 ? (
+            <div className="col-span-2 text-center py-8 text-slate-500">
+              Aucun partenariat
+            </div>
+          ) : partnerships.map((partner) => (
             <Card key={partner.id} className="border-slate-200">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-4">
@@ -613,8 +713,12 @@ export function GrowthMonetizationPage() {
                   <Button variant="outline" size="sm" className="flex-1">
                     Voir contrat
                   </Button>
-                  <Button size="sm" className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2] text-white">
-                    Gérer
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
+                    onClick={() => deletePartnershipMutation.mutate(partner.id)}
+                  >
+                    Supprimer
                   </Button>
                 </div>
               </CardContent>
@@ -648,7 +752,19 @@ export function GrowthMonetizationPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {mockPromotions.map((promo) => (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-8 text-center">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />
+                      </td>
+                    </tr>
+                  ) : promotions.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                        Aucune promotion
+                      </td>
+                    </tr>
+                  ) : promotions.map((promo) => (
                     <tr key={promo.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 font-mono font-medium text-[#44DBD4]">{promo.code}</td>
                       <td className="px-6 py-4 text-slate-600">{promo.description}</td>
@@ -669,8 +785,12 @@ export function GrowthMonetizationPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => deletePromotionMutation.mutate(promo.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>
                     </tr>
@@ -779,6 +899,230 @@ export function GrowthMonetizationPage() {
               </div>
             </div>
           )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Add Sponsored Content Sheet */}
+      <Sheet open={showAddContent} onOpenChange={setShowAddContent}>
+        <SheetContent className="w-full sm:max-w-md bg-white overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Nouveau contenu sponsorisé</SheetTitle>
+            <SheetDescription>Créez une nouvelle campagne publicitaire</SheetDescription>
+          </SheetHeader>
+          <div className="py-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Titre</Label>
+              <Input id="title" value={contentForm.title} onChange={(e) => setContentForm({ ...contentForm, title: e.target.value })} placeholder="Nom de la campagne" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Select value={contentForm.type} onValueChange={(v: any) => setContentForm({ ...contentForm, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="banner">Bannière</SelectItem>
+                  <SelectItem value="article">Article</SelectItem>
+                  <SelectItem value="video">Vidéo</SelectItem>
+                  <SelectItem value="featured">Mis en avant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sponsor">Sponsor</Label>
+              <Input id="sponsor" value={contentForm.sponsor} onChange={(e) => setContentForm({ ...contentForm, sponsor: e.target.value })} placeholder="Nom du sponsor" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="placement">Placement</Label>
+              <Select value={contentForm.placement} onValueChange={(v) => setContentForm({ ...contentForm, placement: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="homepage">Page d'accueil</SelectItem>
+                  <SelectItem value="search">Résultats de recherche</SelectItem>
+                  <SelectItem value="sidebar">Barre latérale</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Date de début</Label>
+                <Input id="startDate" type="date" value={contentForm.startDate} onChange={(e) => setContentForm({ ...contentForm, startDate: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">Date de fin</Label>
+                <Input id="endDate" type="date" value={contentForm.endDate} onChange={(e) => setContentForm({ ...contentForm, endDate: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="budget">Budget (¥)</Label>
+              <Input id="budget" type="number" value={contentForm.budget} onChange={(e) => setContentForm({ ...contentForm, budget: Number(e.target.value) })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="imageUrl">URL de l'image</Label>
+              <Input id="imageUrl" value={contentForm.imageUrl} onChange={(e) => setContentForm({ ...contentForm, imageUrl: e.target.value })} placeholder="https://..." />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select value={contentForm.status} onValueChange={(v: any) => setContentForm({ ...contentForm, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Brouillon</SelectItem>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="paused">En pause</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setShowAddContent(false)}>Annuler</Button>
+            <Button className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2]" onClick={() => createSponsoredMutation.mutate(contentForm)} disabled={createSponsoredMutation.isPending}>
+              {createSponsoredMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Créer
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add Partnership Sheet */}
+      <Sheet open={showAddPartnership} onOpenChange={setShowAddPartnership}>
+        <SheetContent className="w-full sm:max-w-md bg-white overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Nouveau partenariat</SheetTitle>
+            <SheetDescription>Créez un nouveau partenariat commercial</SheetDescription>
+          </SheetHeader>
+          <div className="py-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom du partenaire</Label>
+              <Input id="name" value={partnershipForm.name} onChange={(e) => setPartnershipForm({ ...partnershipForm, name: e.target.value })} placeholder="Nom de l'entreprise" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Type de partenariat</Label>
+              <Select value={partnershipForm.type} onValueChange={(v: any) => setPartnershipForm({ ...partnershipForm, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="affiliate">Affiliation</SelectItem>
+                  <SelectItem value="corporate">Corporate</SelectItem>
+                  <SelectItem value="strategic">Stratégique</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tier">Niveau</Label>
+              <Select value={partnershipForm.tier} onValueChange={(v: any) => setPartnershipForm({ ...partnershipForm, tier: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bronze">Bronze</SelectItem>
+                  <SelectItem value="silver">Argent</SelectItem>
+                  <SelectItem value="gold">Or</SelectItem>
+                  <SelectItem value="platinum">Platine</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="commission">Commission (%)</Label>
+              <Input id="commission" type="number" value={partnershipForm.commission} onChange={(e) => setPartnershipForm({ ...partnershipForm, commission: Number(e.target.value) })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactEmail">Email de contact</Label>
+              <Input id="contactEmail" type="email" value={partnershipForm.contactEmail} onChange={(e) => setPartnershipForm({ ...partnershipForm, contactEmail: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactPhone">Téléphone</Label>
+              <Input id="contactPhone" value={partnershipForm.contactPhone} onChange={(e) => setPartnershipForm({ ...partnershipForm, contactPhone: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select value={partnershipForm.status} onValueChange={(v: any) => setPartnershipForm({ ...partnershipForm, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="suspended">Suspendu</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setShowAddPartnership(false)}>Annuler</Button>
+            <Button className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2]" onClick={() => createPartnershipMutation.mutate(partnershipForm)} disabled={createPartnershipMutation.isPending}>
+              {createPartnershipMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Créer
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add Promotion Sheet */}
+      <Sheet open={showAddPromotion} onOpenChange={setShowAddPromotion}>
+        <SheetContent className="w-full sm:max-w-md bg-white overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Nouvelle promotion</SheetTitle>
+            <SheetDescription>Créez un nouveau code de promotion</SheetDescription>
+          </SheetHeader>
+          <div className="py-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">Code</Label>
+              <Input id="code" value={promotionForm.code} onChange={(e) => setPromotionForm({ ...promotionForm, code: e.target.value.toUpperCase() })} placeholder="PROMO2024" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" value={promotionForm.description} onChange={(e) => setPromotionForm({ ...promotionForm, description: e.target.value })} placeholder="Description de la promotion" rows={2} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="discountType">Type de réduction</Label>
+                <Select value={promotionForm.discountType} onValueChange={(v: any) => setPromotionForm({ ...promotionForm, discountType: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Pourcentage</SelectItem>
+                    <SelectItem value="fixed">Montant fixe</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discount">Réduction</Label>
+                <Input id="discount" type="number" value={promotionForm.discount} onChange={(e) => setPromotionForm({ ...promotionForm, discount: Number(e.target.value) })} placeholder={promotionForm.discountType === 'percentage' ? '10' : '1000'} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="minPurchase">Achat minimum</Label>
+                <Input id="minPurchase" type="number" value={promotionForm.minPurchase} onChange={(e) => setPromotionForm({ ...promotionForm, minPurchase: Number(e.target.value) })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="usageLimit">Limite d'utilisation</Label>
+                <Input id="usageLimit" type="number" value={promotionForm.usageLimit} onChange={(e) => setPromotionForm({ ...promotionForm, usageLimit: Number(e.target.value) })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Date de début</Label>
+                <Input id="startDate" type="date" value={promotionForm.startDate} onChange={(e) => setPromotionForm({ ...promotionForm, startDate: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">Date de fin</Label>
+                <Input id="endDate" type="date" value={promotionForm.endDate} onChange={(e) => setPromotionForm({ ...promotionForm, endDate: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select value={promotionForm.status} onValueChange={(v: any) => setPromotionForm({ ...promotionForm, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Brouillon</SelectItem>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="expired">Expiré</SelectItem>
+                  <SelectItem value="disabled">Désactivé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setShowAddPromotion(false)}>Annuler</Button>
+            <Button className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2]" onClick={() => createPromotionMutation.mutate(promotionForm)} disabled={createPromotionMutation.isPending}>
+              {createPromotionMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Créer
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
     </div>

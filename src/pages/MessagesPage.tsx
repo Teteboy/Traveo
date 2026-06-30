@@ -33,7 +33,7 @@ export function MessagesPage() {
     const load = async () => {
       try {
         const res = await apiClient.get('/chat/conversations')
-        const data = res.data?.data?.conversations || []
+        const data = (res as any).data?.data?.conversations || []
         setThreads(data)
 
         // Check for pre-selected conversation from service detail pages
@@ -59,7 +59,7 @@ export function MessagesPage() {
     const loadMessages = async () => {
       try {
         const res = await apiClient.get(`/chat/conversations/${selectedThread}/messages`)
-        setMessages(res.data?.data?.messages || [])
+        setMessages((res as any).data?.data?.messages || [])
       } catch {
         setMessages([])
       }
@@ -72,7 +72,7 @@ export function MessagesPage() {
     try {
       await apiClient.post(`/chat/conversations/${selectedThread}/messages`, { text: messageText.trim() })
       const res = await apiClient.get(`/chat/conversations/${selectedThread}/messages`)
-      setMessages(res.data?.data?.messages || [])
+      setMessages((res as any).data?.data?.messages || [])
       setMessageText('')
     } catch {}
   }

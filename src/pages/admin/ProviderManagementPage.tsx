@@ -93,8 +93,8 @@ export function ProviderManagementPage() {
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      apiClient.delete(`/admin/providers/${id}`, { reason }),
+    mutationFn: ({ id }: { id: string }) =>
+      apiClient.delete(`/admin/providers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-providers'] })
       setShowDetailDialog(false)
@@ -123,12 +123,9 @@ export function ProviderManagementPage() {
   const handleDelete = () => {
     if (!selectedProvider) return
     
-    const reason = prompt('Raison de la suppression (optionnel):')
-    
     if (confirm('Êtes-vous sûr de vouloir supprimer définitivement cette demande de prestataire ?')) {
       deleteMutation.mutate({
         id: selectedProvider.id,
-        reason: reason || undefined,
       })
     }
   }

@@ -5,12 +5,9 @@ import {
   Building2,
   Utensils,
   MapPin,
-  Camera,
   Music,
   Car,
   Home,
-  Briefcase,
-  FileText,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -18,9 +15,6 @@ import {
   Star,
   DollarSign,
   Users,
-  Globe,
-  Phone,
-  Mail,
   Upload,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -103,7 +97,6 @@ export function BecomeProviderPage() {
   const [verificationDocuments, setVerificationDocuments] = useState<Array<{type: string; url: string}>>([])
   const [documentType, setDocumentType] = useState<string>('')
   const [documentUrl, setDocumentUrl] = useState<string>('')
-  const [submitted, setSubmitted] = useState(false)
 
   // Check provider status on load and when user changes
   const checkProviderStatus = async () => {
@@ -111,7 +104,7 @@ export function BecomeProviderPage() {
     
     try {
       const response = await apiClient.get('/auth/provider-status')
-      setProviderStatus(response.data.data)
+      setProviderStatus((response as any).data.data)
     } catch (error) {
       console.error('Failed to check provider status:', error)
     }
@@ -130,13 +123,13 @@ export function BecomeProviderPage() {
         description: formData.description,
       })
       
-      const data = response.data.data
+      const data = (response as any).data.data
       
       // Update user role in auth store
       if (data.user) {
         updateUser(data.user)
       } else {
-        updateUser({ ...user, role: 'PROVIDER' })
+        updateUser({ ...user, role: 'provider' as any })
       }
       
       // Update tokens if new ones were provided
@@ -179,7 +172,7 @@ export function BecomeProviderPage() {
         description: formData.description,
       })
       
-      setProviderStatus(response.data.data)
+      setProviderStatus((response as any).data.data)
       setShowApplicationForm(false)
       setIsSubmitting(false)
       
@@ -205,7 +198,7 @@ export function BecomeProviderPage() {
       })
       
       setVerificationDocuments(prev => [...prev, { type: documentType, url: documentUrl }])
-      setProviderStatus(response.data.data)
+      setProviderStatus((response as any).data.data)
       setShowDocumentUpload(false)
       setIsSubmitting(false)
       setDocumentType('')
@@ -245,39 +238,6 @@ export function BecomeProviderPage() {
       checkProviderStatus()
     }
   }, [isAuthenticated, user])
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardContent className="pt-8 pb-8">
-            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Demande envoyée!</h2>
-            <p className="text-slate-500 mb-6">
-              Votre demande pour devenir prestataire a été soumise avec succès. 
-              Notre équipe examinera votre demande dans les plus brefs délais.
-            </p>
-            <div className="bg-slate-50 rounded-lg p-4 mb-6">
-              <p className="text-sm text-slate-600">
-                Vous recevrez une notification par email une fois votre demande traitée.
-                Le délai de traitement est généralement de 2-3 jours ouvrables.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => navigate('/profile')}>
-                Retour au profil
-              </Button>
-              <Button className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" onClick={() => navigate('/')}>
-                Accueil
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-slate-50">

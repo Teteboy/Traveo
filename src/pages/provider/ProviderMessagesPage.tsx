@@ -36,7 +36,7 @@ export function ProviderMessagesPage() {
     const loadConversations = async () => {
       try {
         const res = await apiClient.get('/chat/conversations')
-        const data = res.data?.data?.conversations || []
+        const data = (res as any).data?.data?.conversations || []
         setThreads(data)
         if (data.length > 0 && !selectedThread) {
           setSelectedThread(data[0].id)
@@ -57,7 +57,7 @@ export function ProviderMessagesPage() {
     const loadMessages = async () => {
       try {
         const res = await apiClient.get(`/chat/conversations/${selectedThread}/messages`)
-        setMessages(res.data?.data?.messages || [])
+        setMessages((res as any).data?.data?.messages || [])
       } catch (e) {
         setMessages([])
       }
@@ -71,7 +71,7 @@ export function ProviderMessagesPage() {
     try {
       await apiClient.post(`/chat/conversations/${selectedThread}/messages`, { text: messageText.trim() })
       const res = await apiClient.get(`/chat/conversations/${selectedThread}/messages`)
-      setMessages(res.data?.data?.messages || [])
+      setMessages((res as any).data?.data?.messages || [])
       setMessageText('')
     } catch (e) {
       console.error('Failed to send message')

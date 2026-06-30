@@ -14,6 +14,7 @@ import {
   Loader2,
   CreditCard,
   ShieldCheck,
+  Bed,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,7 @@ import { DateRangePicker } from '@/components/ui/date-picker'
 import { formatPrice } from '@/lib/formatters'
 import { useHotel, useBookHotel } from '@/hooks/useServices'
 import { usePayWithWallet } from '@/hooks/useWallet'
+import { useHotelRooms } from '@/hooks/useServiceItems'
 import { adaptHotel } from '@/lib/adapters'
 import type { ApiServiceItem } from '@/lib/adapters'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -49,13 +51,16 @@ export function HotelDetailsPage() {
   const navigate = useNavigate()
   const { data: hotelData, isLoading } = useHotel(hotelId ?? '')
   const hotel = hotelData ? adaptHotel(hotelData as unknown as ApiServiceItem) : null
+  const { data: roomsData, isLoading: roomsLoading } = useHotelRooms(hotelId)
+  const rooms = roomsData ?? []
   const bookHotel = useBookHotel()
   const payWithWallet = usePayWithWallet()
 
   const [checkInDate, setCheckInDate] = useState<Date | undefined>()
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>()
   const [guests, setGuests] = useState(2)
-  const [rooms, setRooms] = useState(1)
+  const [selectedRoomCount, setSelectedRoomCount] = useState(1)
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null)
   const [showBookingDialog, setShowBookingDialog] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [bookingComplete, setBookingComplete] = useState(false)
@@ -69,7 +74,9 @@ export function HotelDetailsPage() {
 
   const calculateTotal = () => {
     const nights = calculateNights()
-    return nights * hotel!.price * rooms
+    const room = rooms.find(r => r.id === selectedRoom)
+    const pricePerNight = room?.price ?? hotel!.price
+    return nights * pricePerNight * selectedRoomCount
   }
 
   const handleBooking = async () => {
@@ -189,6 +196,84 @@ export function HotelDetailsPage() {
 
                 <Separator />
 
+                {/* Rooms */}
+                <div>
+                  <h3 className="font-semibold text-lg mb-4">Chambres disponibles</h3>
+                  {roomsLoading ? (
+                    <div className="space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-32 w-full" />
+                      ))}
+                    </div>
+                  ) : rooms.length === 0 ? (
+                    <p className="text-muted-foreground">Aucune chambre disponible pour le moment.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {rooms.map((room) => (
+                        <Card
+                          key={room.id}
+                          className={`cursor-pointer transition-all hover:shadow-md ${
+                            selectedRoom === room.id ? 'ring-2 ring-[#44DBD4]' : ''
+                          }`}
+                          onClick={() => setSelectedRoom(room.id)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex gap-4">
+                              {room.imageUrl && (
+                                <img
+                                  src={room.imageUrl}
+                                  alt={room.name}
+                                  className="w-24 h-24 object-cover rounded-lg"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <h4 className="font-semibold text-lg">{room.name}</h4>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Bed className="h-4 w-4" />
+                                      <span>Jusqu'à {room.maxGuests} personnes</span>
+                                      <span>•</span>
+                                      <span>{room.available} disponible(s)</span>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-2xl font-bold text-[#44DBD4]">
+                                      {formatPrice(room.price, room.currency || 'XAF')}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">par nuit</div>
+                                  </div>
+                                </div>
+                                {room.description && (
+                                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                                    {room.description}
+                                  </p>
+                                )}
+                                {room.amenities && room.amenities.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {room.amenities.slice(0, 3).map((amenity) => (
+                                      <Badge key={amenity} variant="secondary" className="text-xs">
+                                        {amenity}
+                                      </Badge>
+                                    ))}
+                                    {room.amenities.length > 3 && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        +{room.amenities.length - 3}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
                 {/* Policies */}
                 <div>
                   <h3 className="font-semibold text-lg mb-4">Informations importantes</h3>
@@ -264,16 +349,17 @@ export function HotelDetailsPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Chambres</label>
+                    <label className="text-sm font-medium">Nombre de chambres</label>
                     <div className="relative">
                       <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        max={hotel.availableRooms}
-                        className="pl-10 border-slate-200" 
-                        value={rooms}
-                        onChange={(e) => setRooms(parseInt(e.target.value) || 1)}
+                      <Input
+                        type="number"
+                        min="1"
+                        max={selectedRoom ? rooms.find(r => r.id === selectedRoom)?.available : hotel.availableRooms}
+                        className="pl-10 border-slate-200"
+                        value={selectedRoomCount}
+                        onChange={(e) => setSelectedRoomCount(parseInt(e.target.value) || 1)}
+                        disabled={!selectedRoom}
                       />
                     </div>
                   </div>
@@ -282,10 +368,12 @@ export function HotelDetailsPage() {
                 <Separator />
 
                 {/* Price Summary */}
-                {checkInDate && checkOutDate && (
+                {checkInDate && checkOutDate && selectedRoom && (
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">{formatPrice(hotel.price, hotel.currency)} x {calculateNights()} nuits x {rooms} chambre(s)</span>
+                      <span className="text-muted-foreground">
+                        {formatPrice(rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price, hotel.currency)} x {calculateNights()} nuits x {selectedRoomCount} chambre(s)
+                      </span>
                     </div>
                     <div className="flex justify-between font-semibold text-base">
                       <span>Total</span>
@@ -294,23 +382,17 @@ export function HotelDetailsPage() {
                   </div>
                 )}
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Chambres disponibles</span>
-                    <span className="font-medium">{hotel.availableRooms}</span>
-                  </div>
-                  {hotel.availableRooms <= 5 && (
-                    <Badge variant="destructive" className="w-full justify-center">
-                      Plus que {hotel.availableRooms} chambres disponibles !
-                    </Badge>
-                  )}
-                </div>
+                {!selectedRoom && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Sélectionnez une chambre pour voir le prix
+                  </p>
+                )}
 
-                <Button 
-                  className="w-full bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" 
+                <Button
+                  className="w-full bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
                   size="lg"
                   onClick={() => setShowBookingDialog(true)}
-                  disabled={!checkInDate || !checkOutDate}
+                  disabled={!checkInDate || !checkOutDate || !selectedRoom}
                 >
                   Réserver maintenant
                 </Button>
@@ -348,7 +430,7 @@ export function HotelDetailsPage() {
                   <p><strong>Arrivée:</strong> {checkInDate?.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                   <p><strong>Départ:</strong> {checkOutDate?.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                   <p><strong>Voyageurs:</strong> {guests}</p>
-                  <p><strong>Chambres:</strong> {rooms}</p>
+                  <p><strong>Chambres:</strong> {selectedRoomCount}</p>
                   <p><strong>Total:</strong> {formatPrice(calculateTotal(), hotel.currency)}</p>
                 </div>
               </div>
@@ -375,19 +457,19 @@ export function HotelDetailsPage() {
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p> {hotel.location}, {hotel.country}</p>
                     <p> {checkInDate?.toLocaleDateString('fr-FR')} - {checkOutDate?.toLocaleDateString('fr-FR')}</p>
-                    <p> {guests} voyageur(s)  {rooms} chambre(s)</p>
+                    <p> {guests} voyageur(s)  {selectedRoomCount} chambre(s)</p>
                     <p> {calculateNights()} nuit(s)</p>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>{formatPrice(hotel.price, hotel.currency)} x {calculateNights()} nuits</span>
-                    <span>{formatPrice(hotel.price * calculateNights(), hotel.currency)}</span>
+                    <span>{formatPrice(rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price, hotel.currency)} x {calculateNights()} nuits</span>
+                    <span>{formatPrice((rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price) * calculateNights(), hotel.currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>{rooms} chambre(s)</span>
-                    <span>{formatPrice(hotel.price * calculateNights() * rooms, hotel.currency)}</span>
+                    <span>{selectedRoomCount} chambre(s)</span>
+                    <span>{formatPrice((rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price) * calculateNights() * selectedRoomCount, hotel.currency)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">

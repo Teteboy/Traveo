@@ -15,6 +15,7 @@ import {
   Building2,
   CheckCircle,
   Clock,
+  Loader2,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -38,7 +39,11 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { PaginationControls } from '@/components/ui/pagination-controls'
-import { useAdminUsers, useDeleteAdminUser } from '@/hooks/useAdmin'
+import { Label } from '@/components/ui/label'
+import { useAdminUsers, useDeleteAdminUser, useCreateAdminUser } from '@/hooks/useAdmin'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
+import { toast } from 'sonner'
 
 type ManagementUser = {
   id: string
@@ -77,13 +82,23 @@ const kycLabels: Record<string, { label: string; color: string }> = {
 }
 
 export function UserManagementPage() {
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedUser, setSelectedUser] = useState<ManagementUser | null>(null)
   const [showUserDetails, setShowUserDetails] = useState(false)
+  const [showAddUser, setShowAddUser] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [filterOpen, setFilterOpen] = useState(false)
   const [filters, setFilters] = useState({ role: 'all', status: 'all', kycStatus: 'all' })
+  const [newUserForm, setNewUserForm] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    country: '',
+    role: 'user' as 'user' | 'provider' | 'admin',
+  })
 
   const usersQuery = useAdminUsers({
     page: currentPage,
@@ -92,6 +107,27 @@ export function UserManagementPage() {
     search: searchQuery,
   })
   const deleteUserMutation = useDeleteAdminUser()
+
+  const createUserMutation = useMutation({
+    mutationFn: (userData: typeof newUserForm) =>
+      apiClient.post('/admin/users', userData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      setShowAddUser(false)
+      setNewUserForm({
+        email: '',
+        firstName: '',
+        lastName: '',
+        phone: '',
+        country: '',
+        role: 'user',
+      })
+      toast.success('Utilisateur créé avec succès')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erreur lors de la création de l\'utilisateur')
+    },
+  })
 
   const mappedUsers = useMemo<ManagementUser[]>(() => {
     return (usersQuery.data?.items ?? []).map((u) => ({
@@ -158,7 +194,7 @@ export function UserManagementPage() {
             <Upload className="h-4 w-4 mr-2" />
             Importer
           </Button>
-          <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" disabled>
+          <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" onClick={() => setShowAddUser(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Nouvel utilisateur
           </Button>
@@ -312,6 +348,91 @@ export function UserManagementPage() {
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setFilters({ role: 'all', status: 'all', kycStatus: 'all' })}>Réinitialiser</Button>
             <Button className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" onClick={() => setFilterOpen(false)}>Appliquer</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={showAddUser} onOpenChange={setShowAddUser}>
+        <SheetContent className="w-full sm:max-w-md bg-white">
+          <SheetHeader>
+            <SheetTitle>Créer un nouvel utilisateur</SheetTitle>
+            <SheetDescription>Ajoutez un nouvel utilisateur à la plateforme</SheetDescription>
+          </SheetHeader>
+          <div className="py-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={newUserForm.email}
+                onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                placeholder="email@example.com"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Prénom</Label>
+                <Input
+                  id="firstName"
+                  value={newUserForm.firstName}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, firstName: e.target.value })}
+                  placeholder="Jean"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Nom</Label>
+                <Input
+                  id="lastName"
+                  value={newUserForm.lastName}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, lastName: e.target.value })}
+                  placeholder="Dupont"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input
+                id="phone"
+                value={newUserForm.phone}
+                onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })}
+                placeholder="+237 600 000 000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="country">Pays</Label>
+              <Input
+                id="country"
+                value={newUserForm.country}
+                onChange={(e) => setNewUserForm({ ...newUserForm, country: e.target.value })}
+                placeholder="Cameroun"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Rôle</Label>
+              <Select value={newUserForm.role} onValueChange={(v: any) => setNewUserForm({ ...newUserForm, role: v })}>
+                <SelectTrigger className="border-slate-200">
+                  <SelectValue placeholder="Sélectionner un rôle" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="user">Utilisateur</SelectItem>
+                  <SelectItem value="provider">Prestataire</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setShowAddUser(false)}>Annuler</Button>
+            <Button
+              className="flex-1 bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
+              onClick={() => createUserMutation.mutate(newUserForm)}
+              disabled={createUserMutation.isPending}
+            >
+              {createUserMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Créer
+            </Button>
           </div>
         </SheetContent>
       </Sheet>

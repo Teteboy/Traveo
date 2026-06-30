@@ -17,6 +17,8 @@ import {
   Bell,
   LogOut,
   ChevronRight,
+  DollarSign,
+  FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -51,6 +53,13 @@ const navigationItems = [
     icon: Wallet,
     path: '/admin/financial',
     description: 'Commissions, remboursements, fraudes',
+  },
+  {
+    id: 'payouts',
+    label: 'Gestion des paiements',
+    icon: DollarSign,
+    path: '/admin/payouts',
+    description: 'Demandes de paiement des prestataires',
   },
   {
     id: 'events',
@@ -100,6 +109,13 @@ const navigationItems = [
     icon: Users,
     path: '/admin/providers',
     description: 'Demandes de compte prestataire, vérification',
+  },
+  {
+    id: 'documents',
+    label: 'Documents de vérification',
+    icon: FileText,
+    path: '/admin/documents',
+    description: 'Révision des documents prestataires',
   },
 ]
 

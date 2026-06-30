@@ -32,6 +32,7 @@ interface ProviderDataState {
   verificationSteps: VerificationStep[]
   notifications: ProviderNotification[]
   unreadNotificationCount: number
+  isLoading: boolean
 
   setDashboardStats: (stats: DashboardStats) => void
   setRecentBookings: (bookings: ProviderBooking[]) => void
@@ -76,6 +77,7 @@ export const useProviderDataStore = create<ProviderDataState>((set) => ({
   verificationSteps: [],
   notifications: [],
   unreadNotificationCount: 0,
+  isLoading: false,
 
   setDashboardStats: (stats) => set({ dashboardStats: stats }),
   setRecentBookings: (bookings) => set({ recentBookings: bookings }),
@@ -144,21 +146,23 @@ export const useProviderDataStore = create<ProviderDataState>((set) => ({
 }))
 
 // Load provider dashboard data from real API
-export const loadProviderDashboardData = async (_serviceType: ServiceType) => {
+export const loadProviderDashboardData = async (serviceType: ServiceType) => {
   const { setDashboardStats, setRecentBookings } = useProviderDataStore.getState()
   try {
     const [statsRes, bookingsRes] = await Promise.all([
       apiClient.get<{ data: { totalBookings: DashboardStats['totalBookings']; totalRevenue: DashboardStats['totalRevenue']; activeServices: number; pendingBookings: number } }>('/providers/dashboard'),
-      apiClient.get<{ page: number; items: ProviderBooking[] }>('/providers/bookings?limit=5'),
+      apiClient.get<{ page: number; limit: number; total: number; items: ProviderBooking[] }>('/providers/bookings?limit=5'),
     ])
     setDashboardStats({
       totalBookings: statsRes.data.totalBookings,
       totalRevenue: statsRes.data.totalRevenue,
       checkinsToday: { count: statsRes.data.pendingBookings, vipCount: 0 },
     })
-    setRecentBookings(bookingsRes.items ?? [])
-  } catch {
+    setRecentBookings(bookingsRes.data?.items ?? bookingsRes.items ?? [])
+  } catch (error) {
+    console.error('Failed to load dashboard data:', error)
     // Fallback to empty stats
     setDashboardStats({ totalBookings: { count: 0, trend: { percentage: 0, direction: 'up' } }, totalRevenue: { amount: 0, currency: 'XAF', trend: { percentage: 0, direction: 'up' } }, checkinsToday: { count: 0, vipCount: 0 } })
+    setRecentBookings([])
   }
 }

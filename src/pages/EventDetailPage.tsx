@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, Ticket, Star, Clock, ArrowLeft, Share2, Heart } from 'lucide-react'
+import { Calendar, MapPin, Ticket, Star, Clock, ArrowLeft, Share2, Heart, Users, Building2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,11 +7,11 @@ import { Separator } from '@/components/ui/separator'
 import { formatDate, formatPrice } from '@/lib/formatters'
 import { useEvent, useBookEvent } from '@/hooks/useServices'
 import { usePayWithWallet } from '@/hooks/useWallet'
+import { useEventSpaces } from '@/hooks/useServiceItems'
 import { adaptEvent } from '@/lib/adapters'
 import { toast } from 'sonner'
 import type { ApiServiceItem } from '@/lib/adapters'
 import { Skeleton } from '@/components/ui/skeleton'
-// import { toast } from 'sonner'
 import { useState } from 'react'
 
 export function EventDetailPage() {
@@ -19,10 +19,13 @@ export function EventDetailPage() {
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
   const [isSaved, setIsSaved] = useState(false)
+  const [selectedSpace, setSelectedSpace] = useState<string | null>(null)
   const bookEvent = useBookEvent()
   const payWithWallet = usePayWithWallet()
   const { data: eventData, isLoading } = useEvent(eventId ?? '')
   const event = eventData ? adaptEvent(eventData as unknown as ApiServiceItem) : null
+  const { data: spacesData, isLoading: spacesLoading } = useEventSpaces(eventId)
+  const spaces = spacesData ?? []
 
   const handleBook = async () => {
     if (!event) return
@@ -44,7 +47,9 @@ export function EventDetailPage() {
   if (isLoading) return <div className="container mx-auto px-4 py-16"><Skeleton className="h-96 w-full rounded-xl" /></div>
   if (!event) return <div className="container mx-auto px-4 py-8"><p>Événement non trouvé</p></div>
 
-  const totalPrice = event.price * quantity
+  const totalPrice = selectedSpace
+    ? (spaces.find(s => s.id === selectedSpace)?.price ?? event.price) * quantity
+    : event.price * quantity
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -185,6 +190,87 @@ export function EventDetailPage() {
               </CardContent>
             </Card>
 
+            {/* Event Spaces */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Espaces disponibles</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {spacesLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
+                  </div>
+                ) : spaces.length === 0 ? (
+                  <p className="text-muted-foreground">Aucun espace disponible pour le moment.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {spaces.map((space) => (
+                      <Card
+                        key={space.id}
+                        className={`cursor-pointer transition-all hover:shadow-md ${
+                          selectedSpace === space.id ? 'ring-2 ring-primary' : ''
+                        }`}
+                        onClick={() => setSelectedSpace(space.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex gap-4">
+                            {space.imageUrl && (
+                              <img
+                                src={space.imageUrl}
+                                alt={space.name}
+                                className="w-24 h-24 object-cover rounded-lg"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <h4 className="font-semibold text-lg">{space.name}</h4>
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Users className="h-4 w-4" />
+                                    <span>Jusqu'à {space.capacity} personnes</span>
+                                    <span>•</span>
+                                    <Building2 className="h-4 w-4" />
+                                    <span>{space.eventType}</span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-primary">
+                                    {formatPrice(space.price, space.currency)}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">par espace</div>
+                                </div>
+                              </div>
+                              {space.description && (
+                                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                                  {space.description}
+                                </p>
+                              )}
+                              {space.equipment && space.equipment.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {space.equipment.slice(0, 3).map((equip) => (
+                                    <Badge key={equip} variant="secondary" className="text-xs">
+                                      {equip}
+                                    </Badge>
+                                  ))}
+                                  {space.equipment.length > 3 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      +{space.equipment.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Reviews Preview */}
             <Card>
               <CardHeader>
@@ -245,17 +331,30 @@ export function EventDetailPage() {
               <CardContent className="space-y-4">
                 <div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-3xl font-bold text-primary">
-                      {formatPrice(event.price, event.currency)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">/ billet</span>
+                    {selectedSpace ? (
+                      <>
+                        <span className="text-3xl font-bold text-primary">
+                          {formatPrice(spaces.find(s => s.id === selectedSpace)?.price ?? event.price, event.currency)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">/ espace</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-bold text-primary">
+                          {formatPrice(event.price, event.currency)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">/ billet</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 <Separator />
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Nombre de billets</label>
+                  <label className="text-sm font-medium">
+                    {selectedSpace ? 'Nombre d\'espaces' : 'Nombre de billets'}
+                  </label>
                   <div className="flex items-center gap-3">
                     <Button
                       variant="outline"
@@ -278,14 +377,25 @@ export function EventDetailPage() {
                 <Separator />
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {formatPrice(event.price, event.currency)} × {quantity}
-                    </span>
-                    <span className="font-medium">
-                      {formatPrice(event.price * quantity, event.currency)}
-                    </span>
-                  </div>
+                  {selectedSpace ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {formatPrice(spaces.find(s => s.id === selectedSpace)?.price ?? event.price, event.currency)} × {quantity}
+                      </span>
+                      <span className="font-medium">
+                        {formatPrice((spaces.find(s => s.id === selectedSpace)?.price ?? event.price) * quantity, event.currency)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {formatPrice(event.price, event.currency)} × {quantity}
+                      </span>
+                      <span className="font-medium">
+                        {formatPrice(event.price * quantity, event.currency)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Frais de service</span>
                     <span className="font-medium">{formatPrice(5, event.currency)}</span>
@@ -300,6 +410,12 @@ export function EventDetailPage() {
                     {formatPrice(totalPrice + 5, event.currency)}
                   </span>
                 </div>
+
+                {!selectedSpace && spaces.length > 0 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Sélectionnez un espace ci-dessus ou réservez des billets
+                  </p>
+                )}
 
                 <Button
                   className="w-full"

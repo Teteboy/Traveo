@@ -44,7 +44,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
                id: res.data.user.id,
                email: res.data.user.email,
                name: `${res.data.user.firstName} ${res.data.user.lastName}`,
-               role: userRole as 'SUPER_ADMIN' | 'ADMIN',
+               role: userRole.toLowerCase() as 'super_admin' | 'admin',
                avatar: res.data.user.avatar,
              },
              isAdminAuthenticated: true,

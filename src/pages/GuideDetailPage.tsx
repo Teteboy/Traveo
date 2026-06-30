@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapPin, Star, Languages, Award, Clock, ArrowLeft, Share2, Heart, Calendar, MessageSquare } from 'lucide-react'
+import { MapPin, Star, Languages, Award, Clock, ArrowLeft, Share2, Heart, Calendar, MessageSquare, Users, Mountain } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { formatPrice } from '@/lib/formatters'
 import { useGuide, useBookGuide } from '@/hooks/useServices'
 import { usePayWithWallet } from '@/hooks/useWallet'
+import { useTours } from '@/hooks/useServiceItems'
 import { adaptGuide } from '@/lib/adapters'
 import type { ApiServiceItem } from '@/lib/adapters'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -20,10 +21,13 @@ export function GuideDetailPage() {
   const navigate = useNavigate()
   const [hours, setHours] = useState(4)
   const [isSaved, setIsSaved] = useState(false)
+  const [selectedTour, setSelectedTour] = useState<string | null>(null)
   const bookGuide = useBookGuide()
   const payWithWallet = usePayWithWallet()
   const { data: guideData, isLoading } = useGuide(guideId ?? '')
   const guide = guideData ? adaptGuide(guideData as unknown as ApiServiceItem) : null
+  const { data: toursData, isLoading: toursLoading } = useTours(guideId)
+  const tours = toursData ?? []
 
   const handleBook = async () => {
     if (!guide) return
@@ -54,7 +58,7 @@ export function GuideDetailPage() {
     }
     try {
       const res = await apiClient.post('/chat/conversations', { providerId: guide.providerId })
-      const conversationId = res.data?.data?.conversation?.id
+      const conversationId = (res as any).data?.data?.conversation?.id
       if (conversationId) {
         navigate(`/messages?conversationId=${conversationId}`)
       } else {
@@ -68,7 +72,9 @@ export function GuideDetailPage() {
   if (isLoading) return <div className="container mx-auto px-4 py-16"><Skeleton className="h-96 w-full rounded-xl" /></div>
   if (!guide) return <div className="container mx-auto px-4 py-8"><p>Guide non trouvé</p></div>
 
-  const totalPrice = guide.pricePerHour * hours
+  const totalPrice = selectedTour
+    ? tours.find(t => t.id === selectedTour)?.price ?? guide.pricePerHour * hours
+    : guide.pricePerHour * hours
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -185,41 +191,85 @@ export function GuideDetailPage() {
               </Card>
             </div>
 
-            {/* Services Offered */}
+            {/* Tours Available */}
             <Card>
               <CardHeader>
-                <CardTitle>Services proposés</CardTitle>
+                <CardTitle>Visites et excursions disponibles</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="h-2 w-2 rounded-full bg-primary mt-2" />
-                    <div className="flex-1">
-                      <p className="font-medium">Visites guidées personnalisées</p>
-                      <p className="text-sm text-muted-foreground">
-                        Découvrez les lieux incontournables avec un guide expert
-                      </p>
-                    </div>
+                {toursLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
                   </div>
-                  <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="h-2 w-2 rounded-full bg-primary mt-2" />
-                    <div className="flex-1">
-                      <p className="font-medium">Expériences culturelles</p>
-                      <p className="text-sm text-muted-foreground">
-                        Immersion dans la culture locale et les traditions
-                      </p>
-                    </div>
+                ) : tours.length === 0 ? (
+                  <p className="text-muted-foreground">Aucune visite disponible pour le moment.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {tours.map((tour) => (
+                      <Card
+                        key={tour.id}
+                        className={`cursor-pointer transition-all hover:shadow-md ${
+                          selectedTour === tour.id ? 'ring-2 ring-primary' : ''
+                        }`}
+                        onClick={() => setSelectedTour(tour.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex gap-4">
+                            {tour.imageUrl && (
+                              <img
+                                src={tour.imageUrl}
+                                alt={tour.name}
+                                className="w-24 h-24 object-cover rounded-lg"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <h4 className="font-semibold text-lg">{tour.name}</h4>
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Clock className="h-4 w-4" />
+                                    <span>{tour.duration}</span>
+                                    <span>•</span>
+                                    <Users className="h-4 w-4" />
+                                    <span>Jusqu'à {tour.groupSize} personnes</span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-primary">
+                                    {formatPrice(tour.price, tour.currency)}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">par visite</div>
+                                </div>
+                              </div>
+                              {tour.description && (
+                                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                                  {tour.description}
+                                </p>
+                              )}
+                              {tour.difficulty && (
+                                <Badge variant="secondary" className="text-xs">
+                                  <Mountain className="h-3 w-3 mr-1" />
+                                  {tour.difficulty}
+                                </Badge>
+                              )}
+                              {tour.languages && tour.languages.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {tour.languages.map((lang) => (
+                                    <Badge key={lang} variant="outline" className="text-xs">
+                                      {lang}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                  <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="h-2 w-2 rounded-full bg-primary mt-2" />
-                    <div className="flex-1">
-                      <p className="font-medium">Conseils et recommandations</p>
-                      <p className="text-sm text-muted-foreground">
-                        Les meilleurs restaurants, boutiques et lieux cachés
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -298,10 +348,21 @@ export function GuideDetailPage() {
               <CardContent className="space-y-4">
                 <div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-3xl font-bold text-primary">
-                      {formatPrice(guide.pricePerHour, guide.currency)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">/ heure</span>
+                    {selectedTour ? (
+                      <>
+                        <span className="text-3xl font-bold text-primary">
+                          {formatPrice(tours.find(t => t.id === selectedTour)?.price ?? guide.pricePerHour, guide.currency)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">par visite</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-bold text-primary">
+                          {formatPrice(guide.pricePerHour, guide.currency)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">/ heure</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -319,41 +380,54 @@ export function GuideDetailPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Durée (heures)</label>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setHours(Math.max(1, hours - 1))}
-                    >
-                      -
-                    </Button>
-                    <span className="text-lg font-semibold w-12 text-center">{hours}h</span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setHours(Math.min(12, hours + 1))}
-                    >
-                      +
-                    </Button>
+                {!selectedTour && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Durée (heures)</label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setHours(Math.max(1, hours - 1))}
+                      >
+                        -
+                      </Button>
+                      <span className="text-lg font-semibold w-12 text-center">{hours}h</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setHours(Math.min(12, hours + 1))}
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Durée minimale: 2 heures
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Durée minimale: 2 heures
-                  </p>
-                </div>
+                )}
 
                 <Separator />
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {formatPrice(guide.pricePerHour, guide.currency)} × {hours}h
-                    </span>
-                    <span className="font-medium">
-                      {formatPrice(totalPrice, guide.currency)}
-                    </span>
-                  </div>
+                  {selectedTour ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Visite sélectionnée
+                      </span>
+                      <span className="font-medium">
+                        {formatPrice(tours.find(t => t.id === selectedTour)?.price ?? guide.pricePerHour, guide.currency)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {formatPrice(guide.pricePerHour, guide.currency)} × {hours}h
+                      </span>
+                      <span className="font-medium">
+                        {formatPrice(totalPrice, guide.currency)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <Separator />
@@ -364,6 +438,12 @@ export function GuideDetailPage() {
                     {formatPrice(totalPrice, guide.currency)}
                   </span>
                 </div>
+
+                {!selectedTour && tours.length > 0 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Sélectionnez une visite ci-dessus ou réservez à l'heure
+                  </p>
+                )}
 
                 <div className="flex gap-3">
                   <Button

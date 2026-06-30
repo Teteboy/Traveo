@@ -73,7 +73,8 @@ export const useAuthStore = create<AuthState>()(
            const res = await apiClient.post<{ data: { user: AuthUser; tokens: { accessToken: string; refreshToken: string } } }>('/auth/login', { email, password })
            setTokens(res.data.tokens.accessToken, res.data.tokens.refreshToken)
            // Convert role to lowercase to match AuthUser interface (which expects lowercase)
-           const userWithLowercaseRole = { ...res.data.user, role: res.data.user.role.toLowerCase() }
+           const roleLower = res.data.user.role.toLowerCase() as 'user' | 'provider' | 'admin' | 'super_admin'
+           const userWithLowercaseRole = { ...res.data.user, role: roleLower }
            set({ user: userWithLowercaseRole, isAuthenticated: true, isLoading: false })
          } catch (err: unknown) {
            const msg = err instanceof Error ? err.message : 'Connexion échouée'

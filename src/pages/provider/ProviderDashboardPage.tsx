@@ -202,38 +202,23 @@ export function ProviderDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Active Rooms/Services */}
-        {dashboardStats?.activeRooms ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-sm font-medium text-slate-600">Active Rooms</h3>
-                <div className="p-2 bg-[#44DBD4]/10 rounded-lg">
-                  <Bed className="h-5 w-5 text-[#44DBD4]" />
-                </div>
+        {/* Active Services */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-sm font-medium text-slate-600">Active Services</h3>
+              <div className="p-2 bg-[#44DBD4]/10 rounded-lg">
+                <Bed className="h-5 w-5 text-[#44DBD4]" />
               </div>
-              <p className="text-2xl font-bold mb-2">
-                {dashboardStats.activeRooms.occupied}/{dashboardStats.activeRooms.total} occupied
-              </p>
-              <p className="text-sm text-slate-600">
-                {dashboardStats.activeRooms.occupancyRate}% occupancy rate
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-sm font-medium text-slate-600">Active Services</h3>
-                <div className="p-2 bg-[#44DBD4]/10 rounded-lg">
-                  <Bed className="h-5 w-5 text-[#44DBD4]" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold mb-2">24 Active</p>
-              <p className="text-sm text-slate-600">85% utilization rate</p>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+            <p className="text-2xl font-bold mb-2">
+              {dashboardStats?.activeServices ?? 0} Active
+            </p>
+            <p className="text-sm text-slate-600">
+              {dashboardStats?.pendingBookings ?? 0} pending bookings
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Check-ins Today */}
         <Card>
@@ -320,11 +305,18 @@ export function ProviderDashboardPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-green-50 rounded-full">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                <div className={`p-2 rounded-full ${isVerified ? 'bg-green-50' : 'bg-yellow-50'}`}>
+                  {isVerified ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <X className="h-4 w-4 text-yellow-600" />
+                  )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Business License Verified</p>
+                  <p className="text-sm font-medium">Account Verified</p>
+                  <p className={`text-xs ${isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {isVerified ? 'complete' : 'in progress'}
+                  </p>
                 </div>
               </div>
 
@@ -347,12 +339,18 @@ export function ProviderDashboardPage() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-red-50 rounded-full">
-                  <X className="h-4 w-4 text-red-600" />
+                <div className={`p-2 rounded-full ${provider?.verificationProgress === 100 ? 'bg-green-50' : 'bg-red-50'}`}>
+                  {provider?.verificationProgress === 100 ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-600" />
+                  )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Payment Gateway Setup</p>
-                  <p className="text-xs text-red-600">incomplete</p>
+                  <p className="text-sm font-medium">Business Documents</p>
+                  <p className={`text-xs ${provider?.verificationProgress === 100 ? 'text-green-600' : 'text-red-600'}`}>
+                    {provider?.verificationProgress === 100 ? 'complete' : 'incomplete'}
+                  </p>
                 </div>
               </div>
 
@@ -362,12 +360,14 @@ export function ProviderDashboardPage() {
                   <span className="text-sm font-semibold">{provider?.verificationProgress}%</span>
                 </div>
                 <Progress value={provider?.verificationProgress} className="h-2 mb-4" />
-                <Button
-                  className="w-full bg-[#44DBD4] hover:bg-[#3bc9c2]"
-                  onClick={() => navigate('/provider/verification')}
-                >
-                  Complete Verification
-                </Button>
+                {!isVerified && (
+                  <Button
+                    className="w-full bg-[#44DBD4] hover:bg-[#3bc9c2]"
+                    onClick={() => navigate('/provider/verification')}
+                  >
+                    Complete Verification
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

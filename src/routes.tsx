@@ -16,7 +16,6 @@ import { ProfilePage } from './pages/ProfilePage'
 import { NotificationsPage } from './pages/NotificationsPage'
 import { FlightDetailsPage } from './pages/FlightDetailsPage'
 import { HotelDetailsPage } from './pages/HotelDetailsPage'
-import { HotelDetailPage } from './pages/HotelDetailPage'
 import { BookingConfirmationPage } from './pages/BookingConfirmationPage'
 import { TransfersPage } from './pages/TransfersPage'
 import { EventDetailPage } from './pages/EventDetailPage'
@@ -41,6 +40,8 @@ import { GrowthMonetizationPage } from './pages/admin/GrowthMonetizationPage'
 import { RisksLegalPage } from './pages/admin/RisksLegalPage'
 import { UserManagementPage } from './pages/admin/UserManagementPage'
 import { ProviderManagementPage } from './pages/admin/ProviderManagementPage'
+import { AdminPayoutsPage } from './pages/admin/AdminPayoutsPage'
+import { AdminDocumentsPage } from './pages/admin/AdminDocumentsPage'
 import { AdminMessagesPage } from './pages/admin/AdminMessagesPage'
 
 // Provider imports
@@ -50,6 +51,7 @@ import { ProviderDashboardPage } from './pages/provider/ProviderDashboardPage'
 import { ProviderServicesPage } from './pages/provider/ProviderServicesPage'
 import { ProviderBookingsPage } from './pages/provider/ProviderBookingsPage'
 import { ProviderEarningsPage } from './pages/provider/ProviderEarningsPage'
+import { ProviderPayoutsPage } from './pages/provider/ProviderPayoutsPage'
 import { ProviderReviewsPage } from './pages/provider/ProviderReviewsPage'
 import { ProviderMessagesPage } from './pages/provider/ProviderMessagesPage'
 import { ProviderVerificationPage } from './pages/provider/ProviderVerificationPage'
@@ -91,7 +93,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'hotels/:hotelId',
-        element: <HotelDetailPage />,
+        element: <HotelDetailsPage />,
       },
       {
         path: 'events',
@@ -194,6 +196,10 @@ export const router = createBrowserRouter([
         element: <ProviderEarningsPage />,
       },
       {
+        path: 'payouts',
+        element: <ProviderPayoutsPage />,
+      },
+      {
         path: 'reviews',
         element: <ProviderReviewsPage />,
       },
@@ -260,6 +266,14 @@ export const router = createBrowserRouter([
       {
         path: 'providers',
         element: <ProviderManagementPage />,
+      },
+      {
+        path: 'payouts',
+        element: <AdminPayoutsPage />,
+      },
+      {
+        path: 'documents',
+        element: <AdminDocumentsPage />,
       },
       {
         path: 'messages',

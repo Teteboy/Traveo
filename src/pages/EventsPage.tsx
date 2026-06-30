@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, Search, Ticket, Users, CheckCircle, Loader2, CreditCard } from 'lucide-react'
+import { Calendar, MapPin, Search, Ticket, Users, CheckCircle, Loader2, CreditCard, Building2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -8,12 +8,12 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-// Sheet removed - not used in EventsPage
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatDate, formatPrice } from '@/lib/formatters'
 import { useEvents, useBookEvent } from '@/hooks/useServices'
 import { adaptEvent } from '@/lib/adapters'
 import { toast } from 'sonner'
+import { useQueries } from '@tanstack/react-query'
 
 const categories = ['Tous', 'Musique', 'Sport', 'Culture', 'Gastronomie', 'Festival', 'Business']
 const sortOptions = [
@@ -47,6 +47,22 @@ export function EventsPage() {
       if (sortBy === 'price_desc') return b.price - a.price
       return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
     })
+
+  // Fetch event spaces for each event using useQueries
+  const eventIds = events.map(e => e.id)
+  const spacesQueries = useQueries({
+    queries: eventIds.map(id => ({
+      queryKey: ['event-spaces', id],
+      queryFn: async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/service-items/events/${id}/spaces`)
+        const data = await response.json()
+        return data.data || data
+      },
+      enabled: !!id,
+      staleTime: 5 * 60 * 1000,
+    }))
+  })
+  const spacesCountMap = new Map(eventIds.map((id, i) => [id, (spacesQueries[i].data ?? []).length]))
 
   const handleOpenBooking = (event: ReturnType<typeof adaptEvent>, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -151,6 +167,10 @@ export function EventsPage() {
                         <div>
                           <span className="text-2xl font-bold text-[#44DBD4]">{formatPrice(event.price, event.currency)}</span>
                           <span className="text-sm text-slate-500 ml-1">/ billet</span>
+                          <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+                            <Building2 className="h-3 w-3" />
+                            <span>{spacesCountMap.get(event.id) || 0} espaces</span>
+                          </div>
                         </div>
                         <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
                           onClick={e => handleOpenBooking(event, e)}>Réserver</Button>
