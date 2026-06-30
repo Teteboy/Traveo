@@ -1,0 +1,849 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth & Users ────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  PROVIDER
+  ADMIN
+  SUPER_ADMIN
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  phone       String?
+  avatar      String?
+  country     String   @default("CM")
+  role        Role     @default(USER)
+  // Flight booking fields (Duffel requirements)
+  title       String?  // mr, mrs, ms, etc.
+  dateOfBirth DateTime?
+  gender      String?  // m, f
+  preferredCurrency String? @default("XAF") // XAF, EUR, USD
+  language    String?  @default("fr") // fr, en, ar
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  refreshTokens    RefreshToken[]
+  bookings         Booking[]
+  wallet           WalletAccount?
+  visaApplications VisaApplication[]
+  notifications    Notification[]
+  reviews          Review[]
+  provider         Provider?
+  messages         Message[]
+  chatMessages     ChatMessage[]
+  conversations    Conversation[] @relation("UserConversations")
+  documents        Document[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+// ─── Providers ───────────────────────────────────────────────────────────────
+
+enum ServiceType {
+  HOTEL
+  GUIDE
+  TRANSPORT
+  RESTAURANT
+  EVENTS
+}
+
+model Provider {
+  id                   String      @id @default(uuid())
+  userId               String      @unique
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName          String
+  businessType         ServiceType
+  description          String?
+  isVerified           Boolean     @default(false)
+  verificationProgress Int         @default(0)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  services          Service[]
+  bookings          Booking[]
+  conversations     Conversation[]
+  documents         ProviderDocument[]
+  payoutRequests    PayoutRequest[]
+
+  @@map("providers")
+}
+
+// ─── Destinations ────────────────────────────────────────────────────────────
+
+model Destination {
+  id              String   @id @default(uuid())
+  name            String
+  country         String
+  imageUrl        String
+  description     String
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  popularityScore Float    @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  @@map("destinations")
+}
+
+// ─── Services (Hotels, Guides, Restaurants, Transfers, Events) ──────────────
+
+model Service {
+  id          String      @id @default(uuid())
+  providerId  String?
+  provider    Provider?   @relation(fields: [providerId], references: [id])
+  type        ServiceType
+  name        String
+  description String
+  imageUrl    String
+  location    String
+  country     String
+  rating      Float       @default(0)
+  reviewCount Int         @default(0)
+  price       Float
+  currency    String      @default("XAF")
+  isActive    Boolean     @default(true)
+  metadata    Json        // type-specific fields (amenities, languages, etc.)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  bookings   Booking[]
+  reviews    Review[]
+  hotelRooms HotelRoom[]
+  menuItems  MenuItem[]
+  vehicles   Vehicle[]
+  tours      Tour[]
+  eventSpaces EventSpace[]
+
+  @@map("services")
+}
+
+// ─── Flights ─────────────────────────────────────────────────────────────────
+
+model Flight {
+  id              String   @id @default(uuid())
+  airline         String
+  airlineLogo     String?
+  flightNumber    String
+  origin          String
+  originCode      String
+  destination     String
+  destinationCode String
+  departAt        DateTime
+  arriveAt        DateTime
+  durationMinutes Int
+  stops           Int      @default(0)
+  priceEconomy    Float
+  priceBusiness   Float?
+  currency        String   @default("XAF")
+  availableSeats  Int      @default(100)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  bookings Booking[]
+
+  @@map("flights")
+}
+
+// ─── Bookings ─────────────────────────────────────────────────────────────────
+
+enum BookingStatus {
+  PENDING
+  PENDING_PAYMENT
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  serviceType  String        // 'flight' | ServiceType values (lowercase)
+  flightId     String?
+  flight       Flight?       @relation(fields: [flightId], references: [id])
+  serviceId    String?
+  service      Service?      @relation(fields: [serviceId], references: [id])
+  providerId   String?
+  provider     Provider?     @relation(fields: [providerId], references: [id])
+  status       BookingStatus @default(PENDING)
+  totalAmount  Float
+  currency     String        @default("XAF")
+  qrCode       String?
+  ticketData   Json?
+  metadata     Json?         // guests, cabin, dates, etc.
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  payment Payment?
+  refundRequests RefundRequest[]
+
+  @@map("bookings")
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  bookingId   String        @unique
+  booking     Booking       @relation(fields: [bookingId], references: [id])
+  amount      Float
+  currency    String        @default("XAF")
+  provider    String        // 'mtn_momo' | 'orange_money' | 'wallet'
+  status      PaymentStatus @default(PENDING)
+  externalId  String?       // Campay payment ID
+  checkoutUrl String?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+// ─── Refund Requests ───────────────────────────────────────────────────────────
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model RefundRequest {
+  id            String       @id @default(uuid())
+  bookingId     String
+  booking       Booking      @relation(fields: [bookingId], references: [id])
+  amount        Float
+  currency      String       @default("XAF")
+  reason        String
+  status        RefundStatus @default(PENDING)
+  estimatedDate DateTime?
+  completedDate DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("refund_requests")
+}
+
+// ─── Wallet ───────────────────────────────────────────────────────────────────
+
+model WalletAccount {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  currency  String   @default("XAF")
+  balance   Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions WalletTransaction[]
+
+  @@map("wallet_accounts")
+}
+
+model WalletTransaction {
+  id          String   @id @default(uuid())
+  walletId    String
+  wallet      WalletAccount @relation(fields: [walletId], references: [id])
+  type        String   // 'credit' | 'debit' | 'refund'
+  amount      Float
+  currency    String
+  status      String   @default("completed") // 'pending' | 'completed' | 'failed'
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@map("wallet_transactions")
+}
+
+// ─── e-Visa ───────────────────────────────────────────────────────────────────
+
+enum VisaStatus {
+  DRAFT
+  SUBMITTED
+  PROCESSING
+  APPROVED
+  REJECTED
+}
+
+model VisaApplication {
+  id             String     @id @default(uuid())
+  userId         String
+  user           User       @relation(fields: [userId], references: [id])
+  countryCode    String
+  countryName    String
+  status         VisaStatus @default(DRAFT)
+  applicantData  Json       // fullName, passportNumber, nationality, phone, email
+  travelDates    Json?      // departAt, returnAt
+  processingFee  Float?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  documents VisaDocument[]
+
+  @@map("visa_applications")
+}
+
+model VisaDocument {
+  id            String          @id @default(uuid())
+  applicationId String
+  application   VisaApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  documentType  String
+  fileName      String
+  fileUrl       String?
+  uploadedAt    DateTime        @default(now())
+
+  @@map("visa_documents")
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // 'booking' | 'payment' | 'visa' | 'reminder' | 'system' | 'promotion'
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+
+model Review {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  serviceId        String?
+  service          Service? @relation(fields: [serviceId], references: [id])
+  rating           Float
+  comment          String?
+  providerResponse String?
+  respondedAt      DateTime?
+  createdAt        DateTime @default(now())
+
+  @@map("reviews")
+}
+
+// ─── Messages ────────────────────────────────────────────────────────────────
+
+model Conversation {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation("UserConversations", fields: [userId], references: [id])
+  providerId   String
+  provider     Provider  @relation(fields: [providerId], references: [id])
+  bookingId    String?
+  lastMessage  String?
+  lastMessageAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String        @id @default(uuid())
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+  senderId       String
+  sender         User          @relation(fields: [senderId], references: [id])
+  senderType     String        // 'provider' | 'user'
+  text           String
+  isRead         Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+
+  @@map("messages")
+}
+
+// ─── Videos (Discover Feed) ──────────────────────────────────────────────────
+
+model Video {
+  id           String   @id @default(uuid())
+  title        String
+  videoUrl     String
+  thumbnailUrl String?
+  destination  String?
+  country      String?
+  likes        Int      @default(0)
+  views        Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@map("videos")
+}
+
+// ─── Chat Support ──────────────────────────────────────────────────────────────
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  response  String
+  timestamp DateTime @default(now())
+
+  @@map("chat_messages")
+}
+
+// ─── Documents ───────────────────────────────────────────────────────────────
+
+model Document {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName  String
+  fileUrl   String?
+  fileSize  Int
+  category  String   // 'passport' | 'visa' | 'ticket' | 'insurance' | 'other'
+  uploadedAt DateTime @default(now())
+
+  @@map("documents")
+}
+
+// ─── Provider Documents (Verification) ───────────────────────────────────────
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ProviderDocument {
+  id          String         @id @default(uuid())
+  providerId  String
+  provider    Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  documentType String        // 'id_card' | 'business_license' | 'insurance' | 'tax_certificate' | 'other'
+  fileUrl     String
+  fileName    String
+  status      DocumentStatus @default(PENDING)
+  uploadedAt  DateTime       @default(now())
+  reviewedAt  DateTime?
+  reviewNote  String?
+
+  @@map("provider_documents")
+}
+
+// ─── Payout Requests ───────────────────────────────────────────────────────────
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model PayoutRequest {
+  id          String       @id @default(uuid())
+  providerId  String
+  provider    Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  amount      Float
+  currency    String       @default("XAF")
+  status      PayoutStatus @default(PENDING)
+  bankDetails Json         // Bank account details
+  requestedAt DateTime     @default(now())
+  processedAt DateTime?
+  processedBy String?      // Admin user ID
+  rejectionReason String?
+
+  @@map("payout_requests")
+}
+
+// ─── Service Sub-Items (Type-specific) ─────────────────────────────────────────
+
+model HotelRoom {
+  id          String   @id @default(uuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  price       Float
+  maxGuests   Int
+  available   Int
+  amenities   String[]
+  description String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hotel_rooms")
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  price       Float
+  cuisine     String
+  description String?
+  preparationTime Int?
+  imageUrl    String?
+  dietary     String[] // 'vegetarian', 'vegan', 'gluten-free', etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("menu_items")
+}
+
+model Vehicle {
+  id          String   @id @default(uuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  price       Float
+  capacity    Int
+  vehicleType String   // 'sedan', 'suv', 'van', 'bus', etc.
+  routes      String[]
+  features    String[] // 'ac', 'wifi', 'usb', etc.
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("vehicles")
+}
+
+model Tour {
+  id          String   @id @default(uuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  price       Float
+  duration    String   // '2 hours', 'half day', 'full day'
+  groupSize   Int
+  languages   String[]
+  difficulty  String?  // 'easy', 'moderate', 'hard'
+  description String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tours")
+}
+
+model EventSpace {
+  id          String   @id @default(uuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  price       Float
+  capacity    Int
+  eventType   String   // 'wedding', 'corporate', 'party', etc.
+  equipment   String[] // 'projector', 'sound system', 'catering', etc.
+  description String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("event_spaces")
+}
+
+// ─── Growth & Monetization ────────────────────────────────────────────────────────
+
+enum CampaignStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+}
+
+enum ContentType {
+  ARTICLE
+  BANNER
+  VIDEO
+  FEATURED
+}
+
+model SponsoredContent {
+  id            String         @id @default(uuid())
+  title         String
+  type          ContentType
+  sponsor       String
+  sponsorId     String
+  placement     String         // 'home_hero', 'flights_sidebar', 'discover_feed', 'hotels_top', etc.
+  status        CampaignStatus @default(DRAFT)
+  startDate     DateTime
+  endDate       DateTime
+  impressions   Int            @default(0)
+  clicks        Int            @default(0)
+  budget        Float
+  cost          Float          @default(0)
+  imageUrl      String?
+  videoUrl      String?
+  contentUrl    String?
+  metadata      Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("sponsored_content")
+}
+
+enum PartnershipTier {
+  STANDARD
+  PREMIUM
+  ENTERPRISE
+}
+
+enum PartnershipType {
+  AIRLINE
+  HOTEL_CHAIN
+  TRANSPORT
+  ACTIVITIES
+  RESTAURANT
+  OTHER
+}
+
+model Partnership {
+  id              String           @id @default(uuid())
+  name            String
+  type            PartnershipType
+  status          CampaignStatus   @default(PENDING)
+  tier            PartnershipTier  @default(STANDARD)
+  revenue         Float            @default(0)
+  bookings        Int              @default(0)
+  commission      Float
+  startDate       DateTime?
+  contractEnd     DateTime?
+  benefits        String[]
+  contactEmail    String?
+  contactPhone    String?
+  logoUrl         String?
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("partnerships")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum PromoStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  DISABLED
+}
+
+model Promotion {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  description   String
+  discount      Float
+  discountType  DiscountType
+  minPurchase   Float        @default(0)
+  maxDiscount   Float?
+  usageLimit    Int?
+  usedCount     Int          @default(0)
+  startDate     DateTime
+  endDate       DateTime?
+  status        PromoStatus  @default(DRAFT)
+  applicableTo  String[]     // ['flights', 'hotels', 'events', 'guides', 'restaurants', 'transfers']
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("promotions")
+}
+
+// ─── Risks, Legal & Moderation ─────────────────────────────────────────────────────
+
+enum ModerationStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  ESCALATED
+}
+
+enum ModerationType {
+  REVIEW
+  USER
+  PROVIDER
+  CONTENT
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model ModerationItem {
+  id          String           @id @default(uuid())
+  type        ModerationType
+  content     String
+  authorId    String
+  authorName  String
+  targetType  String
+  targetId    String?
+  targetName  String
+  status      ModerationStatus @default(PENDING)
+  priority    Priority         @default(MEDIUM)
+  reason      String
+  reports     Int              @default(0)
+  resolution  String?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("moderation_items")
+}
+
+enum LegalCaseType {
+  GDPR
+  REFUND_DISPUTE
+  TERMS_VIOLATION
+  COPYRIGHT
+  FRAUD
+  OTHER
+}
+
+model LegalCase {
+  id          String           @id @default(uuid())
+  type        LegalCaseType
+  title       String
+  userId      String
+  userName    String
+  userEmail   String
+  status      ModerationStatus @default(PENDING)
+  priority    Priority         @default(MEDIUM)
+  description String
+  amount      Float?
+  deadline    DateTime?
+  resolution  String?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("legal_cases")
+}
+
+enum SecuritySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SecurityStatus {
+  NEW
+  INVESTIGATING
+  RESOLVED
+  IGNORED
+}
+
+enum SecurityType {
+  LOGIN_ATTEMPT
+  API_ABUSE
+  DATA_BREACH
+  SUSPICIOUS_ACTIVITY
+  MALWARE
+  PHISHING
+  OTHER
+}
+
+model SecurityAlert {
+  id            String         @id @default(uuid())
+  type          SecurityType
+  severity      SecuritySeverity
+  status        SecurityStatus @default(NEW)
+  message       String
+  ip            String?
+  location      String?
+  userAgent     String?
+  affectedUser  String?
+  affectedCount Int            @default(0)
+  resolution    String?
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  metadata      Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("security_alerts")
+}
+
+// ─── Rate Limiting & IP Blocking ─────────────────────────────────────────────────────
+
+model RateLimitRecord {
+  id        String   @id @default(uuid())
+  ip        String
+  endpoint  String
+  createdAt DateTime @default(now())
+
+  @@map("rate_limit_records")
+}
+
+model IpBlock {
+  id           String    @id @default(uuid())
+  ip           String    @unique
+  reason       String
+  blockedUntil DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@map("ip_blocks")
+}
+
+// ─── Failed Login Attempts ─────────────────────────────────────────────────────────
+
+model FailedLoginAttempt {
+  id        String   @id @default(uuid())
+  email     String
+  ip        String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("failed_login_attempts")
+}

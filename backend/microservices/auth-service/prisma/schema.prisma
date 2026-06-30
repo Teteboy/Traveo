@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schema   = "auth"
+}
+
+// ─── Auth & Users ────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  PROVIDER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  avatar    String?
+  country   String   @default("CM")
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  provider      Provider?
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+// ─── Providers ───────────────────────────────────────────────────────────────
+
+enum ServiceType {
+  HOTEL
+  GUIDE
+  TRANSPORT
+  RESTAURANT
+  EVENTS
+}
+
+model Provider {
+  id                   String      @id @default(uuid())
+  userId               String      @unique
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName          String
+  businessType         ServiceType
+  description          String?
+  isVerified           Boolean     @default(false)
+  verificationProgress Int         @default(0)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  @@map("providers")
+}

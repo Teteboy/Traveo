@@ -1,0 +1,621 @@
+import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/common_widgets.dart';
+import '../pro/notifications_screen.dart';
+import '../pro/settings_screen.dart';
+import '../discover/discover_screen.dart';
+
+// ── Pro video model ────────────────────────────────────────────────────────
+class ProVideo {
+  final String id, category, date;
+  String title, location;
+  int likes, views;
+  double rating;
+  String status; // 'Published' | 'Draft' | 'Processing' | 'Rejected'
+  ProVideo({required this.id, required this.title, required this.location,
+    required this.category, required this.date, required this.likes,
+    required this.views, required this.rating, required this.status});
+}
+
+// ── Screen ─────────────────────────────────────────────────────────────────
+class VideoUploadScreen extends StatefulWidget {
+  const VideoUploadScreen({super.key});
+  @override State<VideoUploadScreen> createState() => _VideoUploadScreenState();
+}
+
+class _VideoUploadScreenState extends State<VideoUploadScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tab;
+
+  final List<ProVideo> _myVideos = [
+    ProVideo(id:'pv1', title:'Kribi Beach Sunset Tour', location:'Kribi, Cameroon',
+      category:'Beach', date:'Feb 28, 2026', likes:3200, views:45000,
+      rating:5.0, status:'Published'),
+    ProVideo(id:'pv2', title:'Mount Cameroon Trek Day 1', location:'Buea, Cameroon',
+      category:'Adventure', date:'Mar 1, 2026', likes:890, views:9800,
+      rating:4.0, status:'Published'),
+    ProVideo(id:'pv3', title:'Yaoundé Street Food Guide', location:'Yaoundé, Cameroon',
+      category:'Culture', date:'Mar 3, 2026', likes:0, views:0,
+      rating:0.0, status:'Draft'),
+  ];
+
+  // ── Upload tab state ──────────────────────────────────────────────────
+  final _titleCtrl    = TextEditingController();
+  final _locationCtrl = TextEditingController();
+  final _descCtrl     = TextEditingController();
+  String _selectedCategory = 'City';
+  bool   _isUploading  = false;
+  double _uploadProgress = 0;
+
+  // Simulated selected file state
+  bool   _fileSelected  = false;
+  String _fileName      = '';
+  String _fileDuration  = '';
+  String _fileSize      = '';
+  bool   _fileError     = false;
+  String _fileErrorMsg  = '';
+
+  final _categories = ['City', 'Beach', 'Adventure', 'Wildlife', 'Culture', 'Hotel', 'Restaurant'];
+
+  @override
+  void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
+  @override
+  void dispose() { _tab.dispose(); _titleCtrl.dispose(); _locationCtrl.dispose(); _descCtrl.dispose(); super.dispose(); }
+
+  // Simulate picking a video file with random valid/invalid scenarios
+  void _pickVideo(StateSetter setLocal) {
+    // Simulate file picker — cycles through demo scenarios
+    final scenarios = [
+      {'name':'beach_tour.mp4',    'duration':'1:32', 'sizeMB': 48.0,  'durationSecs': 92,  'ok': true},
+      {'name':'kribi_sunset.mp4',  'duration':'1:45', 'sizeMB': 62.0,  'durationSecs': 105, 'ok': true},
+      {'name':'long_documentary.mp4','duration':'3:12','sizeMB':210.0, 'durationSecs': 192, 'ok': false, 'err':'Video exceeds 1:45. Please trim to under 1 minute 45 seconds.'},
+    ];
+    final pick = scenarios[(_myVideos.length) % scenarios.length];
+    final ok = pick['ok'] as bool;
+    setLocal(() {
+      _fileSelected  = true;
+      _fileName      = pick['name'] as String;
+      _fileDuration  = pick['duration'] as String;
+      _fileSize      = '${(pick['sizeMB'] as double).toStringAsFixed(1)} MB';
+      _fileError     = !ok;
+      _fileErrorMsg  = ok ? '' : (pick['err'] as String);
+    });
+  }
+
+  void _clearFile(StateSetter setLocal) {
+    setLocal(() {
+      _fileSelected = false;
+      _fileName = '';
+      _fileDuration = '';
+      _fileSize = '';
+      _fileError = false;
+      _fileErrorMsg = '';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bgDark,
+      body: Column(children: [
+        _header(),
+        Container(color: AppColors.bgCard,
+          child: TabBar(controller: _tab,
+            indicatorColor: AppColors.primary, indicatorWeight: 3,
+            labelColor: AppColors.primary, unselectedLabelColor: AppColors.textGrey,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            tabs: const [Tab(text: 'My Videos'), Tab(text: 'Upload New')])),
+        Expanded(child: TabBarView(controller: _tab, children: [
+          _myVideosTab(),
+          _uploadTab(),
+        ])),
+      ]),
+    );
+  }
+
+  Widget _header() => Container(
+    color: AppColors.bgDark,
+    child: SafeArea(bottom: false, child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      child: Row(children: [
+        const TraveoLogoWidget(),
+        const Spacer(),
+        GestureDetector(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+          child: Container(width: 40, height: 40,
+            decoration: BoxDecoration(color: AppColors.bgCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.cardBorder)),
+            child: const Icon(Icons.settings_rounded, color: AppColors.textGrey, size: 20))),
+        const SizedBox(width: 8),
+        GestureDetector(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+          child: Stack(children: [
+            Container(width: 40, height: 40,
+              decoration: BoxDecoration(color: AppColors.bgCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.cardBorder)),
+              child: const Icon(Icons.notifications_rounded, color: AppColors.textGrey, size: 20)),
+            Positioned(top: 2, right: 2, child: Container(padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
+              child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)))),
+          ])),
+      ]))));
+
+  // ── TAB 1: My Videos ──────────────────────────────────────────────────────
+  Widget _myVideosTab() {
+    final published  = _myVideos.where((v) => v.status == 'Published').length;
+    final draft      = _myVideos.where((v) => v.status == 'Draft').length;
+    final processing = _myVideos.where((v) => v.status == 'Processing').length;
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      Row(children: [
+        _statChip('Published', published, AppColors.primary),
+        const SizedBox(width: 8),
+        _statChip('Draft', draft, Colors.orange),
+        const SizedBox(width: 8),
+        _statChip('Processing', processing, Colors.blue),
+      ]),
+      const SizedBox(height: 16),
+      Container(padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF0D3B22), Color(0xFF1A5C38)]),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3))),
+        child: Row(children: [
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Total Reach', style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
+            const SizedBox(height: 4),
+            Text(_fmt(_myVideos.fold(0, (s, v) => s + v.views)),
+              style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.w900, fontSize: 28)),
+            const Text('views across all videos', style: TextStyle(color: AppColors.textGrey, fontSize: 11)),
+          ]),
+          const Spacer(),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text(_fmt(_myVideos.fold(0, (s, v) => s + v.likes)),
+              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 22)),
+            const Text('total likes', style: TextStyle(color: AppColors.textGrey, fontSize: 11)),
+          ]),
+        ])),
+      const SizedBox(height: 16),
+      ..._myVideos.map((v) => _videoTile(v)),
+    ]);
+  }
+
+  Widget _statChip(String label, int count, Color color) => Expanded(child: Container(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.3))),
+    child: Column(children: [
+      Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 20)),
+      Text(label, style: const TextStyle(color: AppColors.textGrey, fontSize: 10)),
+    ])));
+
+  Widget _videoTile(ProVideo v) {
+    final statusColor = v.status == 'Published' ? AppColors.primary
+        : v.status == 'Processing' ? Colors.blue
+        : v.status == 'Rejected' ? Colors.red
+        : Colors.orange;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppColors.bgCard, borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.cardBorder.withValues(alpha: 0.5))),
+      child: Column(children: [
+        Row(children: [
+          Container(width: 70, height: 52,
+            decoration: BoxDecoration(color: AppColors.bgCardLight, borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(colors: _catGradient(v.category))),
+            child: Icon(_catIcon(v.category), color: AppColors.textDark.withValues(alpha: 0.3), size: 28)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(v.title, style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.w700, fontSize: 13),
+              maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 3),
+            Row(children: [
+              const Icon(Icons.location_on_rounded, color: AppColors.textGrey, size: 11),
+              const SizedBox(width: 2),
+              Text(v.location, style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
+            ]),
+          ])),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+            child: Text(v.status, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w700))),
+        ]),
+        if (v.status == 'Published') ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            _sr(Icons.visibility_rounded, _fmt(v.views)),
+            const SizedBox(width: 16),
+            _sr(Icons.favorite_rounded, _fmt(v.likes), color: Colors.red),
+            const SizedBox(width: 16),
+            _sr(Icons.star_rounded, v.rating.toStringAsFixed(1), color: AppColors.amber),
+            const Spacer(),
+            _pill('Edit', AppColors.primary, () => _editSheet(context, v)),
+            const SizedBox(width: 8),
+            _pill('Delete', Colors.red, () => _confirmDelete(v)),
+          ]),
+        ],
+        if (v.status == 'Draft') ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            Text('Saved ${v.date}', style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
+            const Spacer(),
+            _pill('Continue', AppColors.primary, () => _tab.animateTo(1)),
+            const SizedBox(width: 8),
+            _pill('Delete', Colors.red, () => _confirmDelete(v)),
+          ]),
+        ],
+        if (v.status == 'Processing') ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            const Icon(Icons.hourglass_top_rounded, color: Colors.blue, size: 13),
+            const SizedBox(width: 4),
+            const Text('Processing... usually takes a few minutes',
+              style: TextStyle(color: Colors.blue, fontSize: 11)),
+            const Spacer(),
+            _pill('Delete', Colors.red, () => _confirmDelete(v)),
+          ]),
+        ],
+      ]));
+  }
+
+  Widget _sr(IconData icon, String val, {Color color = AppColors.textGrey}) =>
+    Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, color: color, size: 13), const SizedBox(width: 3),
+      Text(val, style: TextStyle(color: color, fontSize: 12)),
+    ]);
+
+  Widget _pill(String label, Color color, VoidCallback onTap) =>
+    GestureDetector(onTap: onTap,
+      child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.3))),
+        child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600))));
+
+  void _confirmDelete(ProVideo v) {
+    showDialog(context: context, builder: (_) => AlertDialog(
+      backgroundColor: AppColors.bgCard,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text('Delete Video', style: TextStyle(color: AppColors.textDark)),
+      content: Text('Delete "${v.title}"?', style: const TextStyle(color: AppColors.textGrey)),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: AppColors.textGrey))),
+        TextButton(onPressed: () {
+          setState(() {
+            _myVideos.removeWhere((x) => x.id == v.id);
+            globalUploadedVideos.removeWhere((x) => x.id == v.id);
+          });
+          Navigator.pop(context);
+        }, child: const Text('Delete', style: TextStyle(color: Colors.red))),
+      ]));
+  }
+
+  void _editSheet(BuildContext ctx, ProVideo v) {
+    final tc = TextEditingController(text: v.title);
+    final lc = TextEditingController(text: v.location);
+    showModalBottomSheet(context: ctx, isScrollControlled: true,
+      backgroundColor: AppColors.bgCard,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            left: 24, right: 24, top: 24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(color: AppColors.cardBorder,
+                borderRadius: BorderRadius.circular(2))),
+          const Text('Edit Video', style: TextStyle(
+              color: AppColors.textDark, fontWeight: FontWeight.w800, fontSize: 18)),
+          const SizedBox(height: 20),
+          _formField('Title', tc),
+          _formField('Location', lc),
+          const SizedBox(height: 16),
+          SizedBox(width: double.infinity, height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  v.title    = tc.text.trim().isNotEmpty ? tc.text.trim() : v.title;
+                  v.location = lc.text.trim().isNotEmpty ? lc.text.trim() : v.location;
+                });
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('\"${v.title}\" updated!'),
+                  backgroundColor: AppColors.bgCard));
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12))),
+              child: const Text('Save Changes',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)))),
+          const SizedBox(height: 8),
+        ])));
+  }
+
+  // ── TAB 2: Upload New ─────────────────────────────────────────────────────
+  Widget _uploadTab() => StatefulBuilder(builder: (ctx, setLocal) {
+    return SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+      // ── Constraint info banner ──────────────────────────────────────────
+      Container(padding: const EdgeInsets.all(14), margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Row(children: [
+            Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 16),
+            SizedBox(width: 8),
+            Text('Upload Requirements', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+          ]),
+          const SizedBox(height: 10),
+          _reqRow(Icons.timer_rounded,       'Max duration: 1 min 45 sec'),
+          _reqRow(Icons.sd_card_rounded,     'Formats: MP4, MOV'),
+          _reqRow(Icons.photo_camera_rounded,'Min resolution: 720p'),
+          _reqRow(Icons.check_circle_rounded,'Content must relate to travel & tourism'),
+        ])),
+
+      // ── Video picker area ──────────────────────────────────────────────
+      GestureDetector(
+        onTap: _fileSelected ? null : () => _pickVideo(setLocal),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: _fileSelected ? null : 180,
+          width: double.infinity,
+          padding: _fileSelected ? const EdgeInsets.all(16) : EdgeInsets.zero,
+          decoration: BoxDecoration(
+            color: _fileError
+              ? Colors.red.withValues(alpha: 0.06)
+              : _fileSelected
+                ? AppColors.primary.withValues(alpha: 0.06)
+                : AppColors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _fileError ? Colors.red.withValues(alpha: 0.5)
+                : _fileSelected ? AppColors.primary.withValues(alpha: 0.5)
+                : AppColors.primary.withValues(alpha: 0.4),
+              width: 2, style: BorderStyle.solid)),
+          child: _fileSelected ? _selectedFileCard(setLocal) : _emptyPicker(),
+        )),
+
+      const SizedBox(height: 20),
+
+      // ── Form fields ─────────────────────────────────────────────────────
+      _label('Video Title'),
+      _formField('e.g. Kribi Beach Sunset Tour', _titleCtrl),
+      _label('Location'),
+      _formField('e.g. Kribi, Cameroon', _locationCtrl),
+      _label('Description'),
+      Container(margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(color: AppColors.bgCard, borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.cardBorder)),
+        child: TextField(controller: _descCtrl, maxLines: 3,
+          style: const TextStyle(color: AppColors.textDark, fontSize: 13),
+          decoration: const InputDecoration(
+            hintText: 'Tell viewers what this video is about...',
+            hintStyle: TextStyle(color: AppColors.textGrey),
+            border: InputBorder.none, contentPadding: EdgeInsets.all(14)))),
+
+      _label('Category'),
+      SingleChildScrollView(scrollDirection: Axis.horizontal,
+        child: Row(children: _categories.map((cat) {
+          final active = cat == _selectedCategory;
+          return GestureDetector(onTap: () => setLocal(() => _selectedCategory = cat),
+            child: Container(margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: active ? AppColors.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: active ? AppColors.primary : AppColors.cardBorder)),
+              child: Text(cat, style: TextStyle(
+                color: active ? Colors.white : AppColors.textGrey,
+                fontWeight: FontWeight.w600, fontSize: 13))));
+        }).toList())),
+
+      const SizedBox(height: 20),
+
+      // ── Upload progress ─────────────────────────────────────────────────
+      if (_isUploading) ...[
+        Container(padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: AppColors.bgCard, borderRadius: BorderRadius.circular(14)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Icon(Icons.upload_rounded, color: AppColors.primary, size: 18),
+              const SizedBox(width: 8),
+              Text('Uploading... ${(_uploadProgress * 100).toInt()}%',
+                style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              Text(_fileName, style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
+            ]),
+            const SizedBox(height: 10),
+            ClipRRect(borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(value: _uploadProgress,
+                backgroundColor: AppColors.bgCardLight,
+                valueColor: const AlwaysStoppedAnimation(AppColors.primary), minHeight: 8)),
+            const SizedBox(height: 8),
+            Text('${(_uploadProgress * 62).toStringAsFixed(1)} MB / 62.0 MB',
+              style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
+          ])),
+        const SizedBox(height: 16),
+      ],
+
+      // ── Action buttons ──────────────────────────────────────────────────
+      Row(children: [
+        Expanded(child: OutlinedButton(
+          onPressed: _isUploading ? null : () {
+            setState(() => _myVideos.add(ProVideo(
+              id: 'pv${DateTime.now().millisecondsSinceEpoch}',
+              title: _titleCtrl.text.isEmpty ? 'Untitled Draft' : _titleCtrl.text,
+              location: _locationCtrl.text.isEmpty ? 'Unknown' : _locationCtrl.text,
+              category: _selectedCategory, date: 'Mar 11, 2026',
+              likes: 0, views: 0, rating: 0.0, status: 'Draft')));
+            _tab.animateTo(0);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Saved as draft'), backgroundColor: AppColors.bgCard));
+          },
+          style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.cardBorder),
+            foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+          child: const Text('Save Draft', style: TextStyle(fontWeight: FontWeight.w700)))),
+        const SizedBox(width: 12),
+        Expanded(child: ElevatedButton(
+          onPressed: (_isUploading || _fileError) ? null : () async {
+            if (!_fileSelected) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Please select a video file first'), backgroundColor: Colors.red));
+              return;
+            }
+            if (_titleCtrl.text.isEmpty || _locationCtrl.text.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Please fill in title and location'), backgroundColor: Colors.red));
+              return;
+            }
+            setLocal(() { _isUploading = true; _uploadProgress = 0; });
+            for (int i = 1; i <= 20; i++) {
+              await Future.delayed(const Duration(milliseconds: 200));
+              if (mounted) setLocal(() => _uploadProgress = i / 20);
+            }
+            if (!mounted) return;
+            final newVideo = ProVideo(
+              id: 'pv${DateTime.now().millisecondsSinceEpoch}',
+              title: _titleCtrl.text, location: _locationCtrl.text,
+              category: _selectedCategory, date: 'Mar 11, 2026',
+              likes: 0, views: 0, rating: 0.0, status: 'Processing');
+            // Add to discover feed
+            globalUploadedVideos.add(TravelVideo(
+              id: newVideo.id, title: newVideo.title, location: newVideo.location,
+              uploader: 'Horizon Travel Agency', uploaderHandle: 'horizontravel',
+              category: newVideo.category, likes: 0, comments: 0, views: 0,
+              rating: 0.0, isPro: true));
+            setState(() {
+              _myVideos.add(newVideo);
+              _isUploading = false; _uploadProgress = 0;
+              _titleCtrl.clear(); _locationCtrl.clear(); _descCtrl.clear();
+            });
+            setLocal(() { _fileSelected = false; _fileName = ''; _fileDuration = ''; _fileSize = ''; });
+            _tab.animateTo(0);
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Video uploaded! Now visible in Discover.'),
+              backgroundColor: AppColors.bgCard));
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+          child: const Text('Publish Video', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)))),
+      ]),
+      const SizedBox(height: 24),
+    ]));
+  });
+
+  Widget _emptyPicker() => Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+    Container(width: 64, height: 64,
+      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), shape: BoxShape.circle),
+      child: const Icon(Icons.video_call_rounded, color: AppColors.primary, size: 36)),
+    const SizedBox(height: 12),
+    const Text('Tap to select video', style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.w700, fontSize: 15)),
+    const SizedBox(height: 4),
+    const Text('Max 1 min 45 sec · MP4 or MOV',
+      style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
+  ]);
+
+  Widget _selectedFileCard(StateSetter setLocal) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Row(children: [
+      Container(width: 56, height: 56,
+        decoration: BoxDecoration(
+          color: _fileError ? Colors.red.withValues(alpha: 0.15) : AppColors.primary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12)),
+        child: Icon(
+          _fileError ? Icons.error_rounded : Icons.videocam_rounded,
+          color: _fileError ? Colors.red : AppColors.primary, size: 30)),
+      const SizedBox(width: 14),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(_fileName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+          maxLines: 1, overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 4),
+        Row(children: [
+          _tagChip(Icons.timer_rounded, _fileDuration,
+            _fileError ? Colors.red : AppColors.primary),
+          const SizedBox(width: 8),
+          _tagChip(Icons.sd_card_rounded, _fileSize, AppColors.textGrey),
+        ]),
+      ])),
+      GestureDetector(onTap: () => _clearFile(setLocal),
+        child: const Icon(Icons.close_rounded, color: AppColors.textGrey, size: 22)),
+    ]),
+    if (_fileError) ...[
+      const SizedBox(height: 12),
+      Container(padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.3))),
+        child: Row(children: [
+          const Icon(Icons.warning_rounded, color: Colors.red, size: 18),
+          const SizedBox(width: 10),
+          Expanded(child: Text(_fileErrorMsg,
+            style: const TextStyle(color: Colors.red, fontSize: 12, height: 1.4))),
+        ])),
+      const SizedBox(height: 10),
+      GestureDetector(onTap: () => _pickVideo(setLocal),
+        child: Container(width: double.infinity, height: 36,
+          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3))),
+          child: const Center(child: Text('Choose Another File',
+            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 13))))),
+    ] else ...[
+      const SizedBox(height: 12),
+      Container(padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(10)),
+        child: const Row(children: [
+          Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 16),
+          SizedBox(width: 8),
+          Text('Video meets all requirements — ready to upload',
+            style: TextStyle(color: AppColors.primary, fontSize: 12)),
+        ])),
+    ],
+  ]);
+
+  Widget _tagChip(IconData icon, String label, Color color) => Row(mainAxisSize: MainAxisSize.min, children: [
+    Icon(icon, color: color, size: 12),
+    const SizedBox(width: 3),
+    Text(label, style: TextStyle(color: color, fontSize: 11)),
+  ]);
+
+  Widget _reqRow(IconData icon, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Row(children: [
+      Icon(icon, color: AppColors.primary.withValues(alpha: 0.7), size: 14),
+      const SizedBox(width: 8),
+      Text(text, style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
+    ]));
+
+  Widget _label(String text) => Padding(padding: const EdgeInsets.only(bottom: 8, top: 4),
+    child: Text(text, style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.w700, fontSize: 13)));
+
+  Widget _formField(String hint, TextEditingController ctrl) => Container(
+    margin: const EdgeInsets.only(bottom: 14),
+    decoration: BoxDecoration(color: AppColors.bgCard, borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: AppColors.cardBorder)),
+    child: TextField(controller: ctrl,
+      style: const TextStyle(color: AppColors.textDark, fontSize: 13),
+      decoration: InputDecoration(hintText: hint, hintStyle: const TextStyle(color: AppColors.textGrey),
+        border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13))));
+
+  List<Color> _catGradient(String cat) {
+    switch (cat) {
+      case 'Beach':      return [const Color(0xFF006994), const Color(0xFF00C9A7)];
+      case 'Adventure':  return [const Color(0xFF059669), const Color(0xFF10B981)];
+      case 'Wildlife':   return [const Color(0xFFF59E0B), const Color(0xFFFEF3C7)];
+      case 'Culture':    return [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)];
+      default:           return [const Color(0xFF4F46E5), const Color(0xFFEEF2FF)];
+    }
+  }
+
+  IconData _catIcon(String cat) {
+    switch (cat) {
+      case 'Beach':      return Icons.beach_access_rounded;
+      case 'Adventure':  return Icons.terrain_rounded;
+      case 'Wildlife':   return Icons.pets_rounded;
+      case 'Culture':    return Icons.museum_rounded;
+      default:           return Icons.location_city_rounded;
+    }
+  }
+
+  String _fmt(int n) => n >= 1000 ? '${(n / 1000).toStringAsFixed(1)}K' : '$n';
+}

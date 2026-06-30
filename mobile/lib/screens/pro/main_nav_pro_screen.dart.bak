@@ -1,0 +1,94 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../theme/app_theme.dart';
+import 'accueil_pro_screen.dart';
+import 'discover_pro_screen.dart';
+import 'gestion_pro_screen.dart';
+import 'reservation_pro_screen.dart';
+import 'analyse_pro_screen.dart';
+import 'profile_pro_screen.dart';
+import 'video_upload_screen.dart';
+
+class MainNavProScreen extends StatefulWidget {
+  const MainNavProScreen({super.key});
+  @override State<MainNavProScreen> createState() => _MainNavProScreenState();
+}
+
+class _MainNavProScreenState extends State<MainNavProScreen> {
+  int _idx = 0;
+
+  final _screens = const [
+    AccueilProScreen(),       // 0 Home
+    DiscoverProScreen(),      // 1 Discover
+    VideoUploadScreen(),      // 2 Videos  ← new
+    GestionProScreen(),       // 3 Manage
+    AnalyseProScreen(),       // 4 Analytics
+    ProfileProScreen(),       // 5 Profile
+  ];
+
+  static const _items = [
+    {'icon': Icons.home_rounded,        'label': 'Home'},
+    {'icon': Icons.explore_rounded,     'label': 'Discover'},
+    {'icon': Icons.video_call_rounded,  'label': 'Videos'},   // ← new centre tab
+    {'icon': Icons.folder_rounded,      'label': 'Manage'},
+    {'icon': Icons.bar_chart_rounded,   'label': 'Analytics'},
+    {'icon': Icons.person_rounded,      'label': 'Profile'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light));
+
+    return Scaffold(
+      body: IndexedStack(index: _idx, children: _screens),
+      bottomNavigationBar: _buildNav(),
+    );
+  }
+
+  Widget _buildNav() {
+    const mid = 2; // Videos tab is centre
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20, offset: const Offset(0, -4))]),
+      child: SafeArea(child: SizedBox(height: 68,
+        child: Row(children: List.generate(_items.length, (i) {
+          if (i == mid) {
+            // Centre upload button — highlighted
+            return Expanded(child: Center(
+              child: GestureDetector(
+                onTap: () => setState(() => _idx = i),
+                child: Container(
+                  width: 54, height: 54,
+                  margin: const EdgeInsets.only(bottom: 6),
+                  decoration: BoxDecoration(
+                    color: _idx == mid
+                        ? AppColors.primary
+                        : AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.primary, width: 1.5)),
+                  child: Icon(Icons.video_call_rounded,
+                    color: _idx == mid ? Colors.white : AppColors.primary, size: 28)))));
+          }
+          final active = _idx == i;
+          return Expanded(child: GestureDetector(
+            onTap: () => setState(() => _idx = i),
+            behavior: HitTestBehavior.opaque,
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(_items[i]['icon'] as IconData,
+                color: active ? AppColors.primary : AppColors.textGrey, size: 22),
+              const SizedBox(height: 3),
+              Text(_items[i]['label'] as String,
+                style: TextStyle(
+                  color: active ? AppColors.primary : AppColors.textGrey,
+                  fontSize: 9,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500)),
+            ])));
+        })))),
+    );
+  }
+}
