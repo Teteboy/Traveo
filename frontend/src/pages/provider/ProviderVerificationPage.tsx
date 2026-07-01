@@ -17,6 +17,17 @@ import {
 import { apiClient } from '@/lib/apiClient'
 import { useProviderAuthStore } from '@/stores/providerAuthStore'
 
+interface ProviderDocument {
+  id: string
+  documentType: string
+  fileUrl: string
+  fileName: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  uploadedAt: string
+  reviewedAt: string | null
+  reviewNote: string | null
+}
+
 interface ProviderProfile {
   id: string
   companyName: string
@@ -25,6 +36,7 @@ interface ProviderProfile {
   isVerified: boolean
   verificationProgress: number
   createdAt: string
+  documents?: ProviderDocument[]
 }
 
 interface VerificationStep {
@@ -80,45 +92,54 @@ export function ProviderVerificationPage() {
     }
   }
 
-  // Define verification steps based on progress
+  // Helper to check document status
+  const getDocStatus = (docType: string): 'verified' | 'pending' | 'not_started' => {
+    const doc = providerProfile?.documents?.find(d => d.documentType === docType)
+    if (!doc) return 'not_started'
+    if (doc.status === 'APPROVED') return 'verified'
+    if (doc.status === 'PENDING') return 'pending'
+    return 'not_started'
+  }
+
+  // Define verification steps based on actual documents
   const getVerificationSteps = (): VerificationStep[] => {
-    const progress = providerProfile?.verificationProgress || 0
     const isVerified = providerProfile?.isVerified || false
+    const hasProfile = !!providerProfile?.companyName
 
     return [
       {
         id: '1',
         name: 'Profil soumis',
         description: 'Informations de base de votre entreprise',
-        status: isVerified || progress >= 10 ? 'verified' : 'not_started',
+        status: hasProfile ? 'verified' : 'not_started',
         icon: FileText,
       },
       {
         id: '2',
         name: 'Pièce d\'identité',
         description: 'Téléchargez votre pièce d\'identité ou passeport',
-        status: progress >= 30 ? 'verified' : progress > 10 ? 'pending' : 'not_started',
+        status: getDocStatus('id_card'),
         icon: CheckCircle,
       },
       {
         id: '3',
         name: 'Licence commerciale',
         description: 'Registre de commerce ou licence d\'entreprise',
-        status: progress >= 50 ? 'verified' : progress > 30 ? 'pending' : 'not_started',
+        status: getDocStatus('business_license'),
         icon: FileText,
       },
       {
         id: '4',
         name: 'Assurance',
         description: 'Attestation d\'assurance professionnelle',
-        status: progress >= 70 ? 'verified' : progress > 50 ? 'pending' : 'not_started',
+        status: getDocStatus('insurance'),
         icon: CheckCircle,
       },
       {
         id: '5',
         name: 'Vérification finale',
         description: 'Examen par notre équipe administrative',
-        status: isVerified ? 'verified' : progress >= 90 ? 'pending' : 'not_started',
+        status: isVerified ? 'verified' : getDocStatus('tax_certificate') === 'verified' ? 'pending' : 'not_started',
         icon: Clock,
       },
     ]
@@ -380,6 +401,48 @@ export function ProviderVerificationPage() {
           </Card>
         ))}
       </div>
+
+      {/* Uploaded Documents */}
+      {providerProfile?.documents && providerProfile.documents.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-[#44DBD4]" />
+              Documents Soumis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {providerProfile.documents.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-slate-500" />
+                    <div>
+                      <p className="text-sm font-medium">{doc.fileName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.documentType === 'id_card' && 'Pièce d\'identité'}
+                        {doc.documentType === 'business_license' && 'Licence commerciale'}
+                        {doc.documentType === 'insurance' && 'Assurance'}
+                        {doc.documentType === 'tax_certificate' && 'Attestation fiscale'}
+                        {doc.documentType === 'other' && 'Autre'}
+                        {' • '}
+                        {new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className={
+                    doc.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                    doc.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }>
+                    {doc.status === 'APPROVED' ? 'Approuvé' : doc.status === 'PENDING' ? 'En attente' : 'Rejeté'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Help Card */}
       <Card className="bg-blue-50 border-blue-200">

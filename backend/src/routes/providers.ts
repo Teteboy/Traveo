@@ -11,7 +11,10 @@ router.get('/me', authenticate, requireRole('PROVIDER'), async (req: Request, re
   try {
     const provider = await prisma.provider.findUnique({
       where: { userId: req.user!.userId },
-      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatar: true } } },
+      include: {
+        user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatar: true } },
+        documents: { orderBy: { uploadedAt: 'desc' } },
+      },
     })
     if (!provider) throw createError('Provider profile not found', 404, 'NOT_FOUND')
     res.json(ok(provider))

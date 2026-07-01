@@ -45,6 +45,19 @@ async function main() {
     create: { userId: providerUser.id, companyName: 'Kotto Travel Services', businessType: 'HOTEL', description: 'Hôtels et séjours de luxe au Cameroun', isVerified: true, verificationProgress: 100 },
   })
 
+  // ─── Provider Documents ────────────────────────────────────────────────────
+  const providerDocs = [
+    { providerId: provider.id, documentType: 'id_card', fileUrl: 'https://placehold.co/800x500/44DBD4/white?text=ID+Card', fileName: 'carte_identite_kotto.pdf', status: 'APPROVED' as const, reviewedAt: new Date() },
+    { providerId: provider.id, documentType: 'business_license', fileUrl: 'https://placehold.co/800x500/44DBD4/white?text=Business+License', fileName: 'licence_commerciale_kotto.pdf', status: 'APPROVED' as const, reviewedAt: new Date() },
+    { providerId: provider.id, documentType: 'tax_certificate', fileUrl: 'https://placehold.co/800x500/44DBD4/white?text=Tax+Certificate', fileName: 'attestation_fiscale_kotto.pdf', status: 'APPROVED' as const, reviewedAt: new Date() },
+    { providerId: provider.id, documentType: 'insurance', fileUrl: 'https://placehold.co/800x500/44DBD4/white?text=Insurance', fileName: 'assurance_responsabilite_kotto.pdf', status: 'APPROVED' as const, reviewedAt: new Date() },
+  ]
+
+  for (const doc of providerDocs) {
+    const existing = await prisma.providerDocument.findFirst({ where: { providerId: provider.id, documentType: doc.documentType } })
+    if (!existing) await prisma.providerDocument.create({ data: doc })
+  }
+
   // ─── Destinations ──────────────────────────────────────────────────────────
   const destinations = [
     { name: 'Yaoundé', country: 'Cameroun', imageUrl: 'https://images.unsplash.com/photo-1612538498456-e861df91d4d0?w=800', description: 'La capitale politique du Cameroun, ville des collines', rating: 4.3, reviewCount: 1240, popularityScore: 88 },
@@ -87,7 +100,7 @@ async function main() {
 
   for (const h of hotels) {
     const existing = await prisma.service.findFirst({ where: { name: h.name, type: 'HOTEL' } })
-    if (!existing) await prisma.service.create({ data: { ...h, isActive: true } })
+    if (!existing) await prisma.service.create({ data: { ...h, providerId: provider.id, isActive: true } })
   }
 
   // ─── Guides ────────────────────────────────────────────────────────────────
@@ -99,7 +112,7 @@ async function main() {
 
   for (const g of guides) {
     const existing = await prisma.service.findFirst({ where: { name: g.name, type: 'GUIDE' } })
-    if (!existing) await prisma.service.create({ data: { ...g, isActive: true } })
+    if (!existing) await prisma.service.create({ data: { ...g, providerId: provider.id, isActive: true } })
   }
 
   // ─── Restaurants ──────────────────────────────────────────────────────────
@@ -111,7 +124,7 @@ async function main() {
 
   for (const r of restaurants) {
     const existing = await prisma.service.findFirst({ where: { name: r.name, type: 'RESTAURANT' } })
-    if (!existing) await prisma.service.create({ data: { ...r, isActive: true } })
+    if (!existing) await prisma.service.create({ data: { ...r, providerId: provider.id, isActive: true } })
   }
 
   // ─── Events ────────────────────────────────────────────────────────────────
@@ -123,7 +136,7 @@ async function main() {
 
   for (const e of events) {
     const existing = await prisma.service.findFirst({ where: { name: e.name, type: 'EVENTS' } })
-    if (!existing) await prisma.service.create({ data: { ...e, isActive: true } })
+    if (!existing) await prisma.service.create({ data: { ...e, providerId: provider.id, isActive: true } })
   }
 
   // ─── Transfers ────────────────────────────────────────────────────────────
@@ -134,7 +147,7 @@ async function main() {
 
   for (const t of transfers) {
     const existing = await prisma.service.findFirst({ where: { name: t.name, type: 'TRANSPORT' } })
-    if (!existing) await prisma.service.create({ data: { ...t, isActive: true } })
+    if (!existing) await prisma.service.create({ data: { ...t, providerId: provider.id, isActive: true } })
   }
 
   // ─── Videos ───────────────────────────────────────────────────────────────
