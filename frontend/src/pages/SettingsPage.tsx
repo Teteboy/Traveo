@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, User, Shield, Bell, Globe, HelpCircle, LogOut,
-  Trash2, ChevronRight, Briefcase, CreditCard, Lock,
+  Trash2, ChevronRight, Briefcase, CreditCard, Lock, Key,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -13,6 +15,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { useAuthStore } from '@/stores/authStore'
+import { apiClient } from '@/lib/apiClient'
 import { toast } from 'sonner'
 
 export function SettingsPage() {
@@ -29,9 +32,42 @@ export function SettingsPage() {
   const [marketingNotif, setMarketingNotif] = useState(false)
   const [twoFA, setTwoFA] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   const handleSavePreferences = () => {
     toast.success('Préférences enregistrées')
+  }
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('Les mots de passe ne correspondent pas')
+      return
+    }
+    if (newPassword.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères')
+      return
+    }
+
+    setIsChangingPassword(true)
+    try {
+      await apiClient.patch('/auth/password', {
+        currentPassword,
+        newPassword,
+      })
+      toast.success('Mot de passe modifié avec succès')
+      setShowPasswordDialog(false)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors de la modification du mot de passe')
+    } finally {
+      setIsChangingPassword(false)
+    }
   }
 
   const handleSaveNotifications = () => {
@@ -148,6 +184,10 @@ export function SettingsPage() {
               </div>
               <Switch checked={twoFA} onCheckedChange={setTwoFA} />
             </div>
+            <Separator />
+            <Button variant="outline" onClick={() => setShowPasswordDialog(true)} className="w-full justify-start">
+              <Key className="h-4 w-4 mr-2" /> Changer mon mot de passe
+            </Button>
           </CardContent>
         </Card>
 
@@ -175,6 +215,55 @@ export function SettingsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Annuler</Button>
             <Button variant="destructive" onClick={handleDeleteAccount}>Supprimer définitivement</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Changer le mot de passe</DialogTitle>
+            <DialogDescription>Entrez votre mot de passe actuel et le nouveau mot de passe.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Mot de passe actuel</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Entrez votre mot de passe actuel"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimum 6 caractères"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirmez le nouveau mot de passe"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPasswordDialog(false)} disabled={isChangingPassword}>
+              Annuler
+            </Button>
+            <Button onClick={handleChangePassword} disabled={isChangingPassword}>
+              {isChangingPassword ? 'Modification...' : 'Changer le mot de passe'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

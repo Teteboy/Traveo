@@ -95,9 +95,9 @@ router.get('/bookings', authenticate, requireRole('PROVIDER'), async (req: Reque
     const mapped = items.map(b => ({
       ...b,
       status: b.status.toLowerCase(),
-      guestName: `${b.user.firstName} ${b.user.lastName}`,
-      guestEmail: b.user.email,
-      guestPhone: b.user.phone ?? '',
+      guestName: b.user ? `${b.user.firstName} ${b.user.lastName}` : (b.guestName ?? 'Invité'),
+      guestEmail: b.user?.email ?? (b.guestEmail ?? ''),
+      guestPhone: b.user?.phone ?? (b.guestPhone ?? ''),
       serviceName: b.service?.name ?? 'Service',
     }))
 
@@ -285,15 +285,17 @@ router.patch('/bookings/:id', authenticate, requireRole('PROVIDER'), async (req:
       data: { status: next_ as any },
     })
 
-    await prisma.notification.create({
-      data: {
-        userId: booking.userId,
-        type: 'booking',
-        title: 'Mise à jour de votre réservation',
-        message: `Le statut de votre réservation est maintenant ${next_.toLowerCase()}.`,
-        metadata: { bookingId: booking.id, status: next_ },
-      },
-    })
+    if (booking.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: booking.userId,
+          type: 'booking',
+          title: 'Mise à jour de votre réservation',
+          message: `Le statut de votre réservation est maintenant ${next_.toLowerCase()}.`,
+          metadata: { bookingId: booking.id, status: next_ },
+        },
+      })
+    }
 
     res.json(ok({ ...updated, status: updated.status.toLowerCase() }))
   } catch (err) { next(err) }

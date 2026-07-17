@@ -55,6 +55,7 @@ import { ProviderPayoutsPage } from './pages/provider/ProviderPayoutsPage'
 import { ProviderReviewsPage } from './pages/provider/ProviderReviewsPage'
 import { ProviderMessagesPage } from './pages/provider/ProviderMessagesPage'
 import { ProviderVerificationPage } from './pages/provider/ProviderVerificationPage'
+import { ProviderVideosPage } from './pages/provider/ProviderVideosPage'
 import { MessagesPage } from './pages/MessagesPage'
 import { ProviderSettingsPage } from './pages/provider/ProviderSettingsPage'
 
@@ -206,6 +207,10 @@ export const router = createBrowserRouter([
       {
         path: 'messages',
         element: <ProviderMessagesPage />,
+      },
+      {
+        path: 'videos',
+        element: <ProviderVideosPage />,
       },
       {
         path: 'verification',

@@ -8,14 +8,18 @@ import { config } from '../config/index.js'
 const router = Router()
 
 // POST /payments/campay/initialize
-router.post('/campay/initialize', authenticate, async (req: Request, res: Response, next) => {
+router.post('/campay/initialize', async (req: Request, res: Response, next) => {
   try {
     const { bookingId, amount, currency, provider, customer, successUrl, cancelUrl } = req.body
     if (!bookingId || !amount || !provider) throw createError('bookingId, amount, provider required', 400)
 
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
     if (!booking) throw createError('Booking not found', 404, 'NOT_FOUND')
-    if (booking.userId !== req.user!.userId) throw createError('Forbidden', 403, 'FORBIDDEN')
+    
+    // Allow guest bookings (no userId) or authenticated user bookings
+    if (booking.userId && req.user && booking.userId !== req.user.userId) {
+      throw createError('Forbidden', 403, 'FORBIDDEN')
+    }
 
     // Create payment record
     const payment = await prisma.payment.create({
@@ -65,15 +69,18 @@ router.post('/campay/initialize', authenticate, async (req: Request, res: Respon
             prisma.payment.update({ where: { id: payment.id }, data: { status: 'COMPLETED', completedAt: new Date() } }),
             prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } }),
           ])
-          await prisma.notification.create({
-            data: {
-              userId: req.user!.userId,
-              type: 'payment',
-              title: 'Paiement confirmé',
-              message: `Votre paiement de ${amount / 100} ${currency ?? 'XAF'} a été accepté.`,
-              metadata: { bookingId, paymentId: payment.id },
-            },
-          })
+          // Only create notification if user exists (not a guest booking)
+          if (booking.userId) {
+            await prisma.notification.create({
+              data: {
+                userId: booking.userId,
+                type: 'payment',
+                title: 'Paiement confirmé',
+                message: `Votre paiement de ${amount / 100} ${currency ?? 'XAF'} a été accepté.`,
+                metadata: { bookingId, paymentId: payment.id },
+              },
+            })
+          }
         } catch (e) { console.error('Simulated payment error:', e) }
       }, 3000) // simulate 3s processing
     }
@@ -106,7 +113,7 @@ router.post('/campay/webhooks', async (req: Request, res: Response, next) => {
           prisma.booking.update({ where: { id: payment.bookingId }, data: { status: 'CONFIRMED' } }),
         ])
         const booking = await prisma.booking.findUnique({ where: { id: payment.bookingId } })
-        if (booking) {
+        if (booking && booking.userId) {
           await prisma.notification.create({
             data: {
               userId: booking.userId,

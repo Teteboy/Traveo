@@ -17,6 +17,7 @@ interface VideoItem {
   country?: string
   likes: number
   views: number
+  creator?: { id: string; name: string; avatar?: string | null }
 }
 
 export function useDiscover(page = 1) {

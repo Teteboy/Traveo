@@ -25,7 +25,7 @@ router.get('/', async (req: Request, res: Response, next) => {
     const [destinations, events, dbVideos] = await Promise.all([
       prisma.destination.findMany({ where: { isActive: true }, take: 5, orderBy: { popularityScore: 'desc' } }),
       prisma.service.findMany({ where: { type: 'EVENTS', isActive: true }, take: 6, orderBy: { rating: 'desc' } }),
-      prisma.video.findMany({ where: { isActive: true }, take: limit, skip, orderBy: { createdAt: 'desc' } }),
+      prisma.video.findMany({ where: { isActive: true }, take: limit, skip, orderBy: { createdAt: 'desc' }, include: { uploadedBy: { select: { id: true, firstName: true, lastName: true, avatar: true, provider: { select: { companyName: true } } } } } }),
     ])
 
     const totalVideos = await prisma.video.count({ where: { isActive: true } })
@@ -39,6 +39,11 @@ router.get('/', async (req: Request, res: Response, next) => {
           destination: v.destination ?? '',
           country: v.country ?? '',
           likes: v.likes, views: v.views,
+          creator: v.uploadedBy ? {
+            id: v.uploadedBy.id,
+            name: v.uploadedBy.provider?.companyName || `${v.uploadedBy.firstName} ${v.uploadedBy.lastName}`,
+            avatar: v.uploadedBy.avatar,
+          } : undefined,
         }))
       : YOUTUBE_VIDEOS.slice(skip, skip + limit)
 
@@ -61,7 +66,7 @@ router.get('/videos', async (req: Request, res: Response, next) => {
     const where = { isActive: true, ...(country && { country }) }
     const [total, items] = await Promise.all([
       prisma.video.count({ where }),
-      prisma.video.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      prisma.video.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, include: { uploadedBy: { select: { id: true, firstName: true, lastName: true, avatar: true, provider: { select: { companyName: true } } } } } }),
     ])
 
     const videos = items.length > 0
@@ -71,6 +76,11 @@ router.get('/videos', async (req: Request, res: Response, next) => {
           country: v.country ?? '',
           videoUrl: v.videoUrl.includes('youtube') ? v.videoUrl : YOUTUBE_VIDEOS[0].videoUrl,
           thumbnailUrl: v.thumbnailUrl ?? getYtThumbnail(v.videoUrl),
+          creator: v.uploadedBy ? {
+            id: v.uploadedBy.id,
+            name: v.uploadedBy.provider?.companyName || `${v.uploadedBy.firstName} ${v.uploadedBy.lastName}`,
+            avatar: v.uploadedBy.avatar,
+          } : undefined,
         }))
       : YOUTUBE_VIDEOS.filter(v => !country || v.country.toLowerCase().includes(country.toLowerCase()))
 

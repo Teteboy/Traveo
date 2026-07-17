@@ -22,6 +22,7 @@ import notificationsRouter from './routes/notifications.js'
 import providersRouter from './routes/providers.js'
 import adminRouter from './routes/admin.js'
 import discoverRouter from './routes/discover.js'
+import videosRouter from './routes/videos.js'
 import reviewsRouter from './routes/reviews.js'
 import chatRouter from './routes/chat.js'
 import documentsRouter from './routes/documents.js'
@@ -81,6 +82,7 @@ app.use(`${v1}/providers/payouts`, payoutsRouter)
 app.use(`${v1}/providers/service-items`, serviceItemsRouter)
 app.use(`${v1}/admin`, adminRouter)
 app.use(`${v1}/discover`, discoverRouter)
+app.use(`${v1}/videos`, videosRouter)
 app.use(`${v1}/reviews`, reviewsRouter)
 app.use(`${v1}/chat`, chatRouter)
 app.use(`${v1}/documents`, documentsRouter)

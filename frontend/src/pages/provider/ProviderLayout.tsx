@@ -26,6 +26,7 @@ import {
   Shield,
   CreditCard,
   AlertCircle,
+  Video,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -60,6 +61,7 @@ const navigationItems = [
     items: [
       { id: 'reviews', label: 'Reviews', icon: Star, path: '/provider/reviews' },
       { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/provider/messages' },
+      { id: 'videos', label: 'Videos', icon: Video, path: '/provider/videos' },
     ],
   },
   {

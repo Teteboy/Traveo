@@ -81,7 +81,7 @@ router.post('/login', async (req: Request, res: Response, next) => {
     }
 
     // Check rate limit for this IP (skip if tables don't exist yet)
-    let rateLimitResult = { allowed: true }
+    let rateLimitResult: { allowed: boolean; resetTime?: Date } = { allowed: true }
     try {
       rateLimitResult = await ipRateLimit(ip, '/auth/login', 10, 15) // 10 requests per 15 minutes
     } catch (e) {
@@ -91,12 +91,12 @@ router.post('/login', async (req: Request, res: Response, next) => {
       return res.status(429).json({
         error: 'TOO_MANY_REQUESTS',
         message: 'Too many login attempts, please try again later',
-        retryAfter: Math.ceil((rateLimitResult.resetTime?.getTime() || 0 - Date.now()) / 1000),
+        retryAfter: Math.ceil(((rateLimitResult.resetTime?.getTime() ?? 0) - Date.now()) / 1000),
       })
     }
 
     // Check if login should be blocked (skip if tables don't exist yet)
-    let blockCheck = { blocked: false }
+    let blockCheck: { blocked: boolean; reason?: string } = { blocked: false }
     try {
       blockCheck = await shouldBlockLogin(email, ip)
     } catch (e) {
@@ -293,7 +293,7 @@ router.patch('/password', authenticate, async (req: Request, res: Response, next
 // GET /auth/provider-status — check if user can become provider
 router.get('/provider-status', authenticate, async (_req: Request, res: Response, next) => {
   try {
-    const userId = _req.user.userId
+    const userId = _req.user!.userId
     const provider = await prisma.provider.findUnique({
       where: { userId },
     })
@@ -314,7 +314,7 @@ router.get('/provider-status', authenticate, async (_req: Request, res: Response
 // POST /auth/become-provider — start provider application
 router.post('/become-provider', authenticate, async (req: Request, res: Response, next) => {
   try {
-    const userId = req.user.userId
+    const userId = req.user!.userId
     const { companyName, businessType, description } = req.body
     
     // Validate required fields
@@ -409,7 +409,7 @@ router.post('/become-provider', authenticate, async (req: Request, res: Response
 // PATCH /auth/provider-profile — update provider profile
 router.patch('/provider-profile', authenticate, async (req: Request, res: Response, next) => {
   try {
-    const userId = req.user.userId
+    const userId = req.user!.userId
     const { companyName, businessType, description } = req.body
     
     // Find existing provider
@@ -455,7 +455,7 @@ router.patch('/provider-profile', authenticate, async (req: Request, res: Respon
 // POST /auth/provider-verification-documents — upload verification documents
 router.post('/provider-verification-documents', authenticate, async (req: Request, res: Response, next) => {
   try {
-    const userId = req.user.userId
+    const userId = req.user!.userId
     const { documentType, documentUrl } = req.body
     
     // Validate required fields

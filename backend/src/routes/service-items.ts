@@ -23,7 +23,7 @@ async function getProviderServiceByType(userId: string, serviceType: string) {
   if (!provider) throw createError('Provider not found', 404, 'NOT_FOUND')
 
   const service = await prisma.service.findFirst({
-    where: { providerId: provider.id, type: serviceType.toUpperCase() },
+    where: { providerId: provider.id, type: serviceType.toUpperCase() as any },
   })
   if (!service) {
     // Log for debugging

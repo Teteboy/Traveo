@@ -8,7 +8,7 @@ const router = Router()
 // GET /hotels/:serviceId/rooms — public endpoint for hotel rooms
 router.get('/hotels/:serviceId/rooms', async (req: Request, res: Response, next) => {
   try {
-    const { serviceId } = req.params
+    const { serviceId } = req.params as { serviceId: string }
     const service = await prisma.service.findFirst({
       where: { id: serviceId, type: 'HOTEL', isActive: true },
     })
@@ -25,7 +25,7 @@ router.get('/hotels/:serviceId/rooms', async (req: Request, res: Response, next)
 // GET /restaurants/:serviceId/menu-items — public endpoint for menu items
 router.get('/restaurants/:serviceId/menu-items', async (req: Request, res: Response, next) => {
   try {
-    const { serviceId } = req.params
+    const { serviceId } = req.params as { serviceId: string }
     const service = await prisma.service.findFirst({
       where: { id: serviceId, type: 'RESTAURANT', isActive: true },
     })
@@ -42,7 +42,7 @@ router.get('/restaurants/:serviceId/menu-items', async (req: Request, res: Respo
 // GET /transfers/:serviceId/vehicles — public endpoint for vehicles
 router.get('/transfers/:serviceId/vehicles', async (req: Request, res: Response, next) => {
   try {
-    const { serviceId } = req.params
+    const { serviceId } = req.params as { serviceId: string }
     const service = await prisma.service.findFirst({
       where: { id: serviceId, type: 'TRANSPORT', isActive: true },
     })
@@ -59,7 +59,7 @@ router.get('/transfers/:serviceId/vehicles', async (req: Request, res: Response,
 // GET /guides/:serviceId/tours — public endpoint for tours
 router.get('/guides/:serviceId/tours', async (req: Request, res: Response, next) => {
   try {
-    const { serviceId } = req.params
+    const { serviceId } = req.params as { serviceId: string }
     const service = await prisma.service.findFirst({
       where: { id: serviceId, type: 'GUIDE', isActive: true },
     })
@@ -76,7 +76,7 @@ router.get('/guides/:serviceId/tours', async (req: Request, res: Response, next)
 // GET /events/:serviceId/spaces — public endpoint for event spaces
 router.get('/events/:serviceId/spaces', async (req: Request, res: Response, next) => {
   try {
-    const { serviceId } = req.params
+    const { serviceId } = req.params as { serviceId: string }
     const service = await prisma.service.findFirst({
       where: { id: serviceId, type: 'EVENTS', isActive: true },
     })

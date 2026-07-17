@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, Search, Send, Phone, Mail, HelpCircle, Book, FileText, Video } from 'lucide-react'
+import { MessageCircle, Search, Send, Phone, Mail, HelpCircle, Book, FileText, Video, Bot, User, Plus, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,12 +8,30 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { apiClient } from '@/lib/apiClient'
+import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 
 interface ChatMessage {
   id: string
   sender: 'user' | 'bot'
   message: string
   timestamp: string
+}
+
+interface Thread {
+  id: string
+  otherParty: { name: string; avatar?: string }
+  lastMessage: string
+  lastMessageTime?: string
+  unreadCount: number
+}
+
+interface ConversationMessage {
+  id: string
+  senderId: string
+  senderType: 'user' | 'provider'
+  text: string
+  createdAt: string
 }
 
 const faqCategories = [
@@ -60,6 +78,7 @@ const faqCategories = [
 ]
 
 export function SupportPage() {
+  const navigate = useNavigate()
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -74,13 +93,90 @@ export function SupportPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const user = useCurrentUser()
 
+  // Real-message mode state
+  const [chatMode, setChatMode] = useState<'bot' | 'messages'>('bot')
+  const [threads, setThreads] = useState<Thread[]>([])
+  const [selectedThread, setSelectedThread] = useState<string | null>(null)
+  const [conversationMessages, setConversationMessages] = useState<ConversationMessage[]>([])
+  const [threadsLoading, setThreadsLoading] = useState(false)
+  const [creatingThread, setCreatingThread] = useState(false)
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   useEffect(() => {
     scrollToBottom()
-  }, [chatMessages])
+  }, [chatMessages, conversationMessages])
+
+  // Load real conversations when switching to Messages mode
+  useEffect(() => {
+    if (chatMode !== 'messages') return
+    const loadThreads = async () => {
+      try {
+        setThreadsLoading(true)
+        const res = await apiClient.get('/chat/conversations')
+        const data = (res as any).data?.data?.conversations || []
+        setThreads(data)
+        if (data.length > 0 && !selectedThread) setSelectedThread(data[0].id)
+      } catch (e) {
+        toast.error('Impossible de charger les conversations')
+      } finally {
+        setThreadsLoading(false)
+      }
+    }
+    loadThreads()
+  }, [chatMode])
+
+  // Load messages when selected thread changes
+  useEffect(() => {
+    if (chatMode !== 'messages' || !selectedThread) return
+    const loadMessages = async () => {
+      try {
+        const res = await apiClient.get(`/chat/conversations/${selectedThread}/messages`)
+        setConversationMessages((res as any).data?.data?.messages || [])
+      } catch (e) {
+        setConversationMessages([])
+      }
+    }
+    loadMessages()
+  }, [selectedThread, chatMode])
+
+  const createNewConversation = async () => {
+    if (!user) {
+      toast.info('Connectez-vous pour contacter un conseiller')
+      return
+    }
+    setCreatingThread(true)
+    try {
+      const res = await apiClient.post('/chat/conversations', { text: 'Bonjour, j\'ai besoin d\'aide avec le support Traveo.' })
+      const newThread = (res as any).data?.data?.conversation
+      if (newThread?.id) {
+        setThreads(prev => [newThread, ...prev])
+        setSelectedThread(newThread.id)
+      }
+      toast.success('Conversation démarrée avec le support')
+    } catch (e: any) {
+      toast.error(e.message || 'Impossible de créer la conversation')
+    } finally {
+      setCreatingThread(false)
+    }
+  }
+
+  const handleSendConversationMessage = async () => {
+    if (!inputMessage.trim() || !selectedThread) return
+    try {
+      await apiClient.post(`/chat/conversations/${selectedThread}/messages`, { text: inputMessage.trim() })
+      const res = await apiClient.get(`/chat/conversations/${selectedThread}/messages`)
+      setConversationMessages((res as any).data?.data?.messages || [])
+      setInputMessage('')
+      // Refresh last message preview in the thread list
+      const threadsRes = await apiClient.get('/chat/conversations')
+      setThreads((threadsRes as any).data?.data?.conversations || [])
+    } catch (e) {
+      toast.error('Impossible d\'envoyer le message')
+    }
+  }
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return
@@ -255,102 +351,242 @@ export function SupportPage() {
         <div className="lg:col-span-2">
           <Card className="h-[600px] flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
-                Chat en direct
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  Chat en direct
+                </CardTitle>
+                <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+                  <Button
+                    variant={chatMode === 'bot' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className={chatMode === 'bot' ? 'bg-white shadow-sm' : ''}
+                    onClick={() => setChatMode('bot')}
+                  >
+                    <Bot className="h-4 w-4 mr-1" />
+                    Assistant
+                  </Button>
+                  <Button
+                    variant={chatMode === 'messages' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className={chatMode === 'messages' ? 'bg-white shadow-sm' : ''}
+                    onClick={() => setChatMode('messages')}
+                  >
+                    <User className="h-4 w-4 mr-1" />
+                    Messages
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <Separator />
-            
-            {/* Messages */}
-            <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex gap-3 ${
-                    msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
-                  }`}
-                >
-                  {msg.sender === 'bot' && (
-                    <Avatar className="h-8 w-8 bg-[#44DBD4]">
-                      <AvatarFallback className="text-white">
-                        <MessageCircle className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
-                      msg.sender === 'user'
-                        ? 'bg-[#44DBD4] text-white'
-                        : 'bg-gray-100'
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                    <p className={`text-xs mt-1 ${
-                      msg.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
-                    }`}>
-                      {new Date(msg.timestamp).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  {msg.sender === 'user' && (
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-gray-200">
-                        {user?.firstName?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
 
-              {isTyping && (
-                <div className="flex gap-3">
-                  <Avatar className="h-8 w-8 bg-[#44DBD4]">
-                    <AvatarFallback className="text-white">
-                      <MessageCircle className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="bg-gray-100 rounded-lg p-3 max-w-[70%]">
-                    <div className="flex gap-1">
-                      <span className="animate-bounce">●</span>
-                      <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>●</span>
-                      <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>●</span>
+            {chatMode === 'bot' ? (
+              <>
+                {/* Bot Messages */}
+                <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {chatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex gap-3 ${
+                        msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
+                      }`}
+                    >
+                      {msg.sender === 'bot' && (
+                        <Avatar className="h-8 w-8 bg-[#44DBD4]">
+                          <AvatarFallback className="text-white">
+                            <MessageCircle className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={`max-w-[70%] rounded-lg p-3 ${
+                          msg.sender === 'user'
+                            ? 'bg-[#44DBD4] text-white'
+                            : 'bg-gray-100'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                        <p className={`text-xs mt-1 ${
+                          msg.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
+                        }`}>
+                          {new Date(msg.timestamp).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      {msg.sender === 'user' && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="bg-gray-200">
+                            {user?.firstName?.[0] || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  ))}
+
+                  {isTyping && (
+                    <div className="flex gap-3">
+                      <Avatar className="h-8 w-8 bg-[#44DBD4]">
+                        <AvatarFallback className="text-white">
+                          <MessageCircle className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-gray-100 rounded-lg p-3 max-w-[70%]">
+                        <div className="flex gap-1">
+                          <span className="animate-bounce">●</span>
+                          <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>●</span>
+                          <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>●</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </CardContent>
+
+                <Separator />
+
+                {/* Bot Input */}
+                <CardContent className="p-4">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Tapez votre message..."
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSendMessage()
+                        }
+                      }}
+                      disabled={isTyping}
+                    />
+                    <Button
+                      className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
+                      onClick={handleSendMessage}
+                      disabled={!inputMessage.trim() || isTyping}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </>
+            ) : (
+              <>
+                {/* Real Messages Mode */}
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 overflow-hidden">
+                  {/* Thread List */}
+                  <div className="border-r md:col-span-1 flex flex-col">
+                    <div className="p-3 border-b flex items-center justify-between">
+                      <span className="text-sm font-medium">Conversations</span>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={createNewConversation} disabled={creatingThread}>
+                        {creatingThread ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      {threadsLoading ? (
+                        <div className="p-4 text-sm text-muted-foreground">Chargement...</div>
+                      ) : threads.length === 0 ? (
+                        <div className="p-4 text-sm text-muted-foreground">
+                          Aucune conversation. Cliquez sur + pour contacter le support.
+                        </div>
+                      ) : (
+                        threads.map((thread) => (
+                          <button
+                            key={thread.id}
+                            onClick={() => setSelectedThread(thread.id)}
+                            className={`w-full p-3 text-left border-b hover:bg-slate-50 transition-colors ${
+                              selectedThread === thread.id ? 'bg-slate-50' : ''
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="bg-[#44DBD4] text-white text-xs">
+                                  {thread.otherParty.name.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <p className="font-medium text-sm truncate">{thread.otherParty.name}</p>
+                                  {thread.unreadCount > 0 && (
+                                    <Badge className="bg-[#44DBD4] text-white text-xs px-1.5 py-0 h-5">{thread.unreadCount}</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-600 truncate">{thread.lastMessage}</p>
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
+
+                  {/* Conversation Thread */}
+                  <div className="md:col-span-2 flex flex-col h-full">
+                    {selectedThread && threads.find(t => t.id === selectedThread) ? (
+                      <>
+                        <div className="p-3 border-b flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-[#44DBD4] text-white text-xs">
+                              {threads.find(t => t.id === selectedThread)?.otherParty.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-sm">{threads.find(t => t.id === selectedThread)?.otherParty.name}</p>
+                            <p className="text-xs text-slate-500">Support Traveo</p>
+                          </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                          {conversationMessages.map((msg) => (
+                            <div key={msg.id} className={`flex ${msg.senderType === 'user' ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-sm px-4 py-3 rounded-lg ${msg.senderType === 'user' ? 'bg-[#44DBD4] text-white' : 'bg-slate-100'}`}>
+                                <p className="text-sm">{msg.text}</p>
+                                <p className="text-xs mt-1 opacity-70">
+                                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          <div ref={messagesEndRef} />
+                        </div>
+                        <div className="p-3 border-t">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Tapez votre message..."
+                              value={inputMessage}
+                              onChange={(e) => setInputMessage(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault()
+                                  handleSendConversationMessage()
+                                }
+                              }}
+                            />
+                            <Button
+                              className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
+                              onClick={handleSendConversationMessage}
+                              disabled={!inputMessage.trim() || !selectedThread}
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-6">
+                        <MessageCircle className="h-12 w-12 text-slate-300 mb-3" />
+                        <p className="text-sm text-center">Sélectionnez une conversation ou démarrez-en une nouvelle.</p>
+                        <Button className="mt-4 bg-[#44DBD4] hover:bg-[#3bc9c2] text-white" onClick={createNewConversation} disabled={creatingThread}>
+                          {creatingThread ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                          Contacter le support
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </CardContent>
-
-            <Separator />
-            
-            {/* Input */}
-            <CardContent className="p-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Tapez votre message..."
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSendMessage()
-                    }
-                  }}
-                  disabled={isTyping}
-                />
-                <Button
-                  className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white"
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isTyping}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
+              </>
+            )}
           </Card>
         </div>
       </div>

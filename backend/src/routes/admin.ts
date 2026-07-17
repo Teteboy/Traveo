@@ -141,7 +141,7 @@ router.get('/flights', async (req: Request, res: Response, next) => {
             }),
           })
 
-          const offerRequest = await offerRequestRes.json()
+          const offerRequest: any = await offerRequestRes.json()
           const offerRequestId = offerRequest.data?.id
 
           if (offerRequestId) {
@@ -155,7 +155,7 @@ router.get('/flights', async (req: Request, res: Response, next) => {
                 },
               }
             )
-            const offersData = await offersRes.json()
+            const offersData: any = await offersRes.json()
             const offers = (offersData.data ?? []).map((offer: any) => {
               const slice = offer.slices?.[0]
               const seg = slice?.segments?.[0]
@@ -328,7 +328,7 @@ router.get('/analytics', async (_req: Request, res: Response, next) => {
     ])
 
     // Transform raw query results to match expected types
-    const revenueByMonth = revenueByMonthRaw.map((row: any) => ({
+    const revenueByMonth = (revenueByMonthRaw as any[]).map((row: any) => ({
       month: row.month.toISOString().substring(0, 7), // YYYY-MM format
       revenue: Number(row.revenue),
       count: Number(row.count)
@@ -424,15 +424,17 @@ router.patch('/refunds/:id', async (req: Request, res: Response, next) => {
       include: { booking: true },
     })
 
-    await prisma.notification.create({
-      data: {
-        userId: refund.booking.userId,
-        type: 'refund',
-        title: 'Mise à jour de votre remboursement',
-        message: `Votre demande de remboursement est maintenant ${next_.toLowerCase()}.`,
-        metadata: { refundId: refund.id, status: next_ },
-      },
-    })
+    if (refund.booking.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: refund.booking.userId,
+          type: 'refund',
+          title: 'Mise à jour de votre remboursement',
+          message: `Votre demande de remboursement est maintenant ${next_.toLowerCase()}.`,
+          metadata: { refundId: refund.id, status: next_ },
+        },
+      })
+    }
 
     res.json(ok({ ...refund, status: refund.status.toLowerCase() }))
   } catch (err) { next(err) }
@@ -883,7 +885,7 @@ router.post('/sponsored-content', async (req: Request, res: Response, next) => {
 // PATCH /admin/sponsored-content/:id — update sponsored content
 router.patch('/sponsored-content/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { title, type, sponsor, sponsorId, placement, status, startDate, endDate, budget, imageUrl, videoUrl, contentUrl, impressions, clicks, cost, metadata } = req.body
     const content = await prisma.sponsoredContent.update({
       where: { id },
@@ -913,7 +915,7 @@ router.patch('/sponsored-content/:id', async (req: Request, res: Response, next)
 // DELETE /admin/sponsored-content/:id — delete sponsored content
 router.delete('/sponsored-content/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     await prisma.sponsoredContent.delete({ where: { id } })
     res.json(ok({ message: 'Sponsored content deleted' }))
   } catch (err) { next(err) }
@@ -968,7 +970,7 @@ router.post('/partnerships', async (req: Request, res: Response, next) => {
 // PATCH /admin/partnerships/:id — update partnership
 router.patch('/partnerships/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { name, type, status, tier, revenue, bookings, commission, startDate, contractEnd, benefits, contactEmail, contactPhone, logoUrl, metadata } = req.body
     const partnership = await prisma.partnership.update({
       where: { id },
@@ -996,7 +998,7 @@ router.patch('/partnerships/:id', async (req: Request, res: Response, next) => {
 // DELETE /admin/partnerships/:id — delete partnership
 router.delete('/partnerships/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     await prisma.partnership.delete({ where: { id } })
     res.json(ok({ message: 'Partnership deleted' }))
   } catch (err) { next(err) }
@@ -1050,7 +1052,7 @@ router.post('/promotions', async (req: Request, res: Response, next) => {
 // PATCH /admin/promotions/:id — update promotion
 router.patch('/promotions/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { code, description, discount, discountType, status, minPurchase, maxDiscount, usageLimit, usedCount, startDate, endDate, applicableTo, metadata } = req.body
     const promotion = await prisma.promotion.update({
       where: { id },
@@ -1077,7 +1079,7 @@ router.patch('/promotions/:id', async (req: Request, res: Response, next) => {
 // DELETE /admin/promotions/:id — delete promotion
 router.delete('/promotions/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     await prisma.promotion.delete({ where: { id } })
     res.json(ok({ message: 'Promotion deleted' }))
   } catch (err) { next(err) }
@@ -1135,7 +1137,7 @@ router.post('/moderation', async (req: Request, res: Response, next) => {
 // PATCH /admin/moderation/:id — resolve moderation item
 router.patch('/moderation/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { status, resolution, priority } = req.body
     const allowed = ['INVESTIGATING', 'RESOLVED', 'ESCALATED']
     const next_ = String(status ?? '').toUpperCase()
@@ -1157,7 +1159,7 @@ router.patch('/moderation/:id', async (req: Request, res: Response, next) => {
 // DELETE /admin/moderation/:id — delete moderation item
 router.delete('/moderation/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     await prisma.moderationItem.delete({ where: { id } })
     res.json(ok({ message: 'Moderation item deleted' }))
   } catch (err) { next(err) }
@@ -1212,7 +1214,7 @@ router.post('/legal-cases', async (req: Request, res: Response, next) => {
 // PATCH /admin/legal-cases/:id — resolve legal case
 router.patch('/legal-cases/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { status, resolution, priority } = req.body
     const allowed = ['INVESTIGATING', 'RESOLVED', 'ESCALATED']
     const next_ = String(status ?? '').toUpperCase()
@@ -1234,7 +1236,7 @@ router.patch('/legal-cases/:id', async (req: Request, res: Response, next) => {
 // DELETE /admin/legal-cases/:id — delete legal case
 router.delete('/legal-cases/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     await prisma.legalCase.delete({ where: { id } })
     res.json(ok({ message: 'Legal case deleted' }))
   } catch (err) { next(err) }
@@ -1288,7 +1290,7 @@ router.post('/security-alerts', async (req: Request, res: Response, next) => {
 // PATCH /admin/security-alerts/:id — resolve security alert
 router.patch('/security-alerts/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { status, resolution, severity } = req.body
     const allowed = ['INVESTIGATING', 'RESOLVED', 'IGNORED']
     const next_ = String(status ?? '').toUpperCase()
@@ -1310,7 +1312,7 @@ router.patch('/security-alerts/:id', async (req: Request, res: Response, next) =
 // DELETE /admin/security-alerts/:id — delete security alert
 router.delete('/security-alerts/:id', async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     await prisma.securityAlert.delete({ where: { id } })
     res.json(ok({ message: 'Security alert deleted' }))
   } catch (err) { next(err) }

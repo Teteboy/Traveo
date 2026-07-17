@@ -152,17 +152,43 @@ async function main() {
 
   // ─── Videos ───────────────────────────────────────────────────────────────
   const videos = [
-    { title: 'Kribi - Le paradis camerounais', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnailUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400', destination: 'Kribi', country: 'Cameroun', likes: 1240, views: 45000 },
-    { title: 'Safari au Parc de Waza', videoUrl: 'https://www.youtube.com/embed/jNQXAC9IVRw', thumbnailUrl: 'https://images.unsplash.com/photo-1535083783855-ded51a20380a?w=400', destination: 'Waza', country: 'Cameroun', likes: 890, views: 32000 },
-    { title: 'Yaoundé - Ville des Collines', videoUrl: 'https://www.youtube.com/embed/kJQP7kiw5Fk', thumbnailUrl: 'https://images.unsplash.com/photo-1612538498456-e861df91d4d0?w=400', destination: 'Yaoundé', country: 'Cameroun', likes: 560, views: 18000 },
-    { title: 'Mont Cameroun - L\'ascension', videoUrl: 'https://www.youtube.com/embed/9bZkp7q19f0', thumbnailUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400', destination: 'Buea', country: 'Cameroun', likes: 2100, views: 78000 },
-    { title: 'Limbe - Ville des Plages Volcaniques', videoUrl: 'https://www.youtube.com/embed/JGwWNGJdvx8', thumbnailUrl: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?w=400', destination: 'Limbe', country: 'Cameroun', likes: 780, views: 22000 },
-    { title: 'Bafoussam - Cœur des Grassfields', videoUrl: 'https://www.youtube.com/embed/OPf0YbXqDm0', thumbnailUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400', destination: 'Bafoussam', country: 'Cameroun', likes: 450, views: 15000 },
+    { userId: providerUser.id, title: 'Kribi - Le paradis camerounais', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnailUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400', destination: 'Kribi', country: 'Cameroun', likes: 1240, views: 45000 },
+    { userId: providerUser.id, title: 'Safari au Parc de Waza', videoUrl: 'https://www.youtube.com/embed/jNQXAC9IVRw', thumbnailUrl: 'https://images.unsplash.com/photo-1535083783855-ded51a20380a?w=400', destination: 'Waza', country: 'Cameroun', likes: 890, views: 32000 },
+    { userId: user.id, title: 'Yaoundé - Ville des Collines', videoUrl: 'https://www.youtube.com/embed/kJQP7kiw5Fk', thumbnailUrl: 'https://images.unsplash.com/photo-1612538498456-e861df91d4d0?w=400', destination: 'Yaoundé', country: 'Cameroun', likes: 560, views: 18000 },
+    { userId: providerUser.id, title: 'Mont Cameroun - L\'ascension', videoUrl: 'https://www.youtube.com/embed/9bZkp7q19f0', thumbnailUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400', destination: 'Buea', country: 'Cameroun', likes: 2100, views: 78000 },
+    { userId: user.id, title: 'Limbe - Ville des Plages Volcaniques', videoUrl: 'https://www.youtube.com/embed/JGwWNGJdvx8', thumbnailUrl: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?w=400', destination: 'Limbe', country: 'Cameroun', likes: 780, views: 22000 },
+    { userId: providerUser.id, title: 'Bafoussam - Cœur des Grassfields', videoUrl: 'https://www.youtube.com/embed/OPf0YbXqDm0', thumbnailUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400', destination: 'Bafoussam', country: 'Cameroun', likes: 450, views: 15000 },
   ]
 
   for (const v of videos) {
     const existing = await prisma.video.findFirst({ where: { title: v.title } })
     if (!existing) await prisma.video.create({ data: v })
+  }
+
+  // ─── Conversations & Messages ─────────────────────────────────────────────
+  const conversation = await prisma.conversation.upsert({
+    where: { id: 'seed-conversation-1' },
+    update: {},
+    create: {
+      id: 'seed-conversation-1',
+      userId: user.id,
+      providerId: provider.id,
+      lastMessage: 'Merci, je vais regarder les disponibilités.',
+      lastMessageAt: new Date(),
+    },
+  })
+
+  const messageCount = await prisma.message.count({ where: { conversationId: conversation.id } })
+  if (messageCount === 0) {
+    await prisma.message.createMany({
+      data: [
+        { conversationId: conversation.id, senderId: user.id, senderType: 'user', text: 'Bonjour, je suis intéressé par le Kribi Beach Resort.', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24) },
+        { conversationId: conversation.id, senderId: providerUser.id, senderType: 'provider', text: 'Bonjour ! Nous avons des chambres disponibles en juillet. Souhaitez-vous réserver ?', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 23) },
+        { conversationId: conversation.id, senderId: user.id, senderType: 'user', text: 'Oui, pour 2 personnes du 15 au 20 juillet.', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 22) },
+        { conversationId: conversation.id, senderId: providerUser.id, senderType: 'provider', text: 'Parfait, je prépare une offre pour vous.', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 21) },
+        { conversationId: conversation.id, senderId: user.id, senderType: 'user', text: 'Merci, je vais regarder les disponibilités.', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 20) },
+      ],
+    })
   }
 
   // ─── Sample notifications ─────────────────────────────────────────────────

@@ -256,7 +256,7 @@ router.get('/conversations', authenticate, async (req: Request, res: Response, n
 // GET /chat/conversations/:id/messages
 router.get('/conversations/:id/messages', authenticate, async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const messages = await prisma.message.findMany({
       where: { conversationId: id },
       orderBy: { createdAt: 'asc' },
@@ -269,7 +269,7 @@ router.get('/conversations/:id/messages', authenticate, async (req: Request, res
 // POST /chat/conversations/:id/messages — send message
 router.post('/conversations/:id/messages', authenticate, async (req: Request, res: Response, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { text } = req.body
     if (!text) return next(createError('Message text is required', 400))
 
@@ -300,12 +300,19 @@ router.post('/conversations/:id/messages', authenticate, async (req: Request, re
 // POST /chat/conversations — create or get existing conversation with a provider
 router.post('/conversations', authenticate, async (req: Request, res: Response, next) => {
   try {
-    const { providerId } = req.body
-    if (!providerId) {
-      return next(createError('providerId is required', 400))
-    }
-
+    let { providerId, text } = req.body as { providerId?: string; text?: string }
     const userId = req.user!.userId
+
+    if (!providerId) {
+      const defaultProvider = await prisma.provider.findFirst({
+        where: { isVerified: true },
+        orderBy: { createdAt: 'asc' },
+      })
+      if (!defaultProvider) {
+        return next(createError('No verified provider available', 400))
+      }
+      providerId = defaultProvider.id
+    }
 
     let conversation = await prisma.conversation.findFirst({
       where: { userId, providerId }
@@ -314,6 +321,17 @@ router.post('/conversations', authenticate, async (req: Request, res: Response, 
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: { userId, providerId }
+      })
+    }
+
+    // Optionally send an initial message
+    if (text?.trim()) {
+      await prisma.message.create({
+        data: { conversationId: conversation.id, senderId: userId, senderType: 'user', text: text.trim() }
+      })
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { lastMessage: text.trim(), lastMessageAt: new Date() }
       })
     }
 

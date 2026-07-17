@@ -3,7 +3,7 @@ import { SecurityMonitor } from './securityMonitor.js'
 
 // Security monitoring scheduler
 class SecurityScheduler {
-  private tasks: cron.ScheduledTask[] = []
+  private tasks: ReturnType<typeof cron.schedule>[] = []
 
   // Run security checks every 5 minutes
   startSecurityMonitoring(): void {

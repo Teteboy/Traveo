@@ -4,6 +4,7 @@ import { authenticate, requireRole } from '../middleware/auth.js'
 import { createError } from '../middleware/error.js'
 import { ok, getPagination, paginated } from '../types.js'
 import { v4 as uuidv4 } from 'uuid'
+import bcrypt from 'bcryptjs'
 
 const router = Router()
 
@@ -85,8 +86,8 @@ router.patch('/:id', authenticate, async (req: Request, res: Response, next) => 
       data: { status: status?.toUpperCase() ?? booking.status },
     })
 
-    if (status?.toUpperCase() === 'CANCELLED') {
-      // Refund logic: add back to wallet
+    if (status?.toUpperCase() === 'CANCELLED' && booking.userId) {
+      // Refund logic: add back to wallet (only for registered users)
       const wallet = await prisma.walletAccount.findUnique({ where: { userId: booking.userId } })
       if (wallet) {
         await prisma.$transaction([
@@ -270,6 +271,122 @@ router.get('/refunds/list', authenticate, async (req: Request, res: Response, ne
     }))
 
     res.json(paginated(mapped, total, page, limit))
+  } catch (err) { next(err) }
+})
+
+// POST /bookings/guest — guest booking with optional auto-registration
+router.post('/guest', async (req: Request, res: Response, next) => {
+  try {
+    const {
+      serviceType,
+      flightId,
+      serviceId,
+      providerId,
+      totalAmount,
+      currency,
+      metadata,
+      // Guest information
+      guestEmail,
+      guestPhone,
+      guestName,
+      guestTitle,
+      guestDateOfBirth,
+      guestGender,
+      guestCountry,
+      // Auto-registration
+      createAccount,
+      password,
+    } = req.body
+
+    if (!serviceType || !totalAmount) {
+      throw createError('serviceType and totalAmount are required', 400)
+    }
+
+    if (!guestEmail || !guestName) {
+      throw createError('guestEmail and guestName are required', 400)
+    }
+
+    let userId: string | null = null
+    let autoRegistered = false
+    let tempPassword: string | null = null
+
+    // Check if user already exists by email
+    const existingUser = await prisma.user.findUnique({ where: { email: guestEmail } })
+
+    if (existingUser) {
+      userId = existingUser.id
+    } else if (createAccount) {
+      // Auto-register the user
+      const tempPwd = password || Math.random().toString(36).slice(-10)
+      const hashedPassword = await bcrypt.hash(tempPwd, 12)
+
+      const nameParts = guestName.split(' ')
+      const firstName = nameParts[0] || guestName
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      const newUser = await prisma.user.create({
+        data: {
+          email: guestEmail,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          phone: guestPhone,
+          country: guestCountry || 'CM',
+          title: guestTitle,
+          dateOfBirth: guestDateOfBirth ? new Date(guestDateOfBirth) : null,
+          gender: guestGender,
+          role: 'USER',
+        },
+      })
+
+      userId = newUser.id
+      autoRegistered = true
+      tempPassword = tempPwd
+
+      // Create wallet for new user
+      await prisma.walletAccount.create({
+        data: { userId: newUser.id, balance: 0, currency: currency || 'XAF' },
+      })
+    }
+
+    // Create the booking
+    const booking = await prisma.booking.create({
+      data: {
+        userId,
+        serviceType,
+        flightId,
+        serviceId,
+        providerId,
+        totalAmount: parseFloat(totalAmount),
+        currency: currency || 'XAF',
+        status: 'PENDING_PAYMENT',
+        metadata: metadata || {},
+        isGuest: !userId,
+        guestEmail,
+        guestPhone,
+        guestName,
+        guestTitle,
+        guestDateOfBirth: guestDateOfBirth ? new Date(guestDateOfBirth) : null,
+        guestGender,
+        guestCountry: guestCountry || 'CM',
+      },
+      include: { flight: true, service: true },
+    })
+
+    res.status(201).json(ok({
+      booking: {
+        id: booking.id,
+        serviceType: booking.serviceType,
+        status: booking.status.toLowerCase(),
+        totalAmount: booking.totalAmount,
+        currency: booking.currency,
+        metadata: booking.metadata,
+        flight: booking.flight,
+        service: booking.service,
+      },
+      user: userId ? { id: userId, autoRegistered, tempPassword } : null,
+      isGuest: !userId,
+    }))
   } catch (err) { next(err) }
 })
 

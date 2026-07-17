@@ -56,17 +56,67 @@ function makeServiceRouter(serviceType: 'HOTEL' | 'GUIDE' | 'TRANSPORT' | 'RESTA
   })
 
   // POST /:id/book
-  r.post('/:id/book', authenticate, async (req: Request, res: Response, next) => {
+  r.post('/:id/book', async (req: Request, res: Response, next) => {
     try {
       const { id } = req.params as { id: string }
       const item = await prisma.service.findFirst({ where: { id, type: serviceType, isActive: true } })
       if (!item) throw createError('Service not found', 404, 'NOT_FOUND')
 
-      const { checkInDate, checkOutDate, guests, startDate, endDate, reservationDate, covers, paymentMethod } = req.body
+      const { 
+        checkInDate, checkOutDate, guests, startDate, endDate, reservationDate, covers, paymentMethod,
+        // Guest booking fields
+        guestEmail, guestPhone, guestName, guestCountry,
+        createAccount, password
+      } = req.body
+
+      let userId: string | null = null
+      let autoRegistered = false
+      let tempPassword: string | null = null
+
+      // Handle guest booking with optional auto-registration
+      if (req.user) {
+        userId = req.user.userId
+      } else if (guestEmail && guestName) {
+        // Check if user already exists
+        const existingUser = await prisma.user.findUnique({ where: { email: guestEmail } })
+        if (existingUser) {
+          userId = existingUser.id
+        } else if (createAccount) {
+          // Auto-register the guest
+          const bcrypt = (await import('bcryptjs')).default
+          const tempPwd = password || Math.random().toString(36).slice(-10)
+          const hashedPassword = await bcrypt.hash(tempPwd, 12)
+
+          const nameParts = guestName.split(' ')
+          const firstName = nameParts[0] || guestName
+          const lastName = nameParts.slice(1).join('') || ''
+
+          const newUser = await prisma.user.create({
+            data: {
+              email: guestEmail,
+              password: hashedPassword,
+              firstName,
+              lastName,
+              phone: guestPhone,
+              country: guestCountry || 'CM',
+              role: 'USER',
+            },
+          })
+
+          userId = newUser.id
+          autoRegistered = true
+          tempPassword = tempPwd
+
+          // Create wallet for new user
+          await prisma.walletAccount.create({
+            data: { userId: newUser.id, balance: 0, currency: item.currency },
+          })
+        }
+      }
 
       const booking = await prisma.booking.create({
         data: {
-          userId: req.user!.userId,
+          userId,
           serviceType: serviceType.toLowerCase(),
           serviceId: item.id,
           providerId: item.providerId ?? undefined,
@@ -74,20 +124,33 @@ function makeServiceRouter(serviceType: 'HOTEL' | 'GUIDE' | 'TRANSPORT' | 'RESTA
           totalAmount: item.price,
           currency: item.currency,
           metadata: { checkInDate, checkOutDate, guests, startDate, endDate, reservationDate, covers, paymentMethod },
+          isGuest: !userId,
+          guestEmail,
+          guestPhone,
+          guestName,
+          guestCountry: guestCountry || 'CM',
         },
       })
 
-      await prisma.notification.create({
-        data: {
-          userId: req.user!.userId,
-          type: 'booking',
-          title: 'Réservation créée',
-          message: `Votre réservation pour ${item.name} est en attente de paiement.`,
-          metadata: { bookingId: booking.id },
-        },
-      })
+      // Only create notification if user exists (not a guest booking)
+      if (userId) {
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'booking',
+            title: 'Réservation créée',
+            message: `Votre réservation pour ${item.name} est en attente de paiement.`,
+            metadata: { bookingId: booking.id },
+          },
+        })
+      }
 
-      res.status(201).json(ok({ bookingId: booking.id, status: 'pending_payment' }))
+      res.status(201).json(ok({
+        bookingId: booking.id,
+        status: 'pending_payment',
+        user: userId ? { id: userId, autoRegistered, tempPassword } : null,
+        isGuest: !userId,
+      }))
     } catch (err) { next(err) }
   })
 

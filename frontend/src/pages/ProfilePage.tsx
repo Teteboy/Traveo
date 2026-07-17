@@ -51,6 +51,7 @@ import { useRequireAuth } from '@/hooks/useAuth'
 import { FavoritesSection } from '@/components/profile/FavoritesSection'
 import { SavedTrips } from '@/components/profile/SavedTrips'
 import { ReviewHistory } from '@/components/profile/ReviewHistory'
+import { MyVideosSection } from '@/components/profile/MyVideosSection'
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -471,58 +472,7 @@ export function ProfilePage() {
         </TabsContent>
 
         <TabsContent value="videos" className="mt-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Mes vidéos</CardTitle>
-                  <CardDescription>Gérez vos vidéos partagées sur la plateforme</CardDescription>
-                </div>
-                <Button className="bg-[#44DBD4] hover:bg-[#3bc9c2] text-white">
-                  <Video className="h-4 w-4 mr-2" />
-                  Ajouter une vidéo
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Sample user videos */}
-                {[
-                  { id: 1, title: 'Sunset at Marrakech', views: 1234, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400' },
-                  { id: 2, title: 'Desert Adventure', views: 856, status: 'pending', thumbnail: 'https://images.unsplash.com/photo-1509023464722-18d996393ca8?w=400' },
-                  { id: 3, title: 'Local Cuisine Tour', views: 2341, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400' },
-                ].map((video) => (
-                  <div key={video.id} className="group relative rounded-lg overflow-hidden border bg-card">
-                    <div className="aspect-video relative">
-                      <img 
-                        src={video.thumbnail} 
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button size="icon" className="h-12 w-12 rounded-full bg-white/90 text-[#44DBD4] hover:bg-white">
-                          <Video className="h-6 w-6" />
-                        </Button>
-                      </div>
-                      <Badge 
-                        className={`absolute top-2 right-2 ${
-                          video.status === 'published' 
-                            ? 'bg-green-500 hover:bg-green-600' 
-                            : 'bg-yellow-500 hover:bg-yellow-600'
-                        }`}
-                      >
-                        {video.status === 'published' ? 'Publié' : 'En attente'}
-                      </Badge>
-                    </div>
-                    <div className="p-3">
-                      <h4 className="font-medium truncate">{video.title}</h4>
-                      <p className="text-sm text-muted-foreground">{video.views.toLocaleString()} vues</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <MyVideosSection />
         </TabsContent>
       </Tabs>
 

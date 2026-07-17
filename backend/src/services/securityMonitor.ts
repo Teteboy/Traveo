@@ -118,6 +118,7 @@ export class SecurityMonitor {
     })
 
     for (const { userId } of suspiciousUsers) {
+      if (!userId) continue
       const count = await prisma.booking.count({
         where: {
           userId,
