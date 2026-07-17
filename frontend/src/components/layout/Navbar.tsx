@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Search, Bell, User, Menu, Wallet, HelpCircle, X, Plane, Hotel, Calendar, MapPin, Utensils, Car, FileText, Compass } from 'lucide-react'
+import { Search, Bell, User, Menu, Wallet, HelpCircle, X, Plane, Hotel, Calendar, MapPin, Utensils, Car, FileText, Compass, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +21,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
 
   const navItems = [
+    { to: '/', label: 'Accueil', icon: Home },
     { to: '/discover', label: 'Découvrir', icon: Compass },
     { to: '/flights', label: 'Vols', icon: Plane },
     { to: '/hotels', label: 'Hôtels', icon: Hotel },

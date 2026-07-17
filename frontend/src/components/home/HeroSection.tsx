@@ -97,9 +97,9 @@ export function HeroSection() {
   return (
     <section className="relative min-h-[600px] flex items-center overflow-hidden">
       {/* Background Image with Overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/assets/images/hero-bg.jpeg)' }}
+        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80)' }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[#010A09]/90 via-[#010A09]/70 to-[#010A09]/50" />
       </div>
