@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useCurrentUser } from '@/hooks/useAuth'
 import { apiClient } from '@/lib/apiClient'
 import { toast } from 'sonner'
-import { useNavigate } from 'react-router-dom'
 
 interface ChatMessage {
   id: string
@@ -78,7 +77,6 @@ const faqCategories = [
 ]
 
 export function SupportPage() {
-  const navigate = useNavigate()
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: '1',

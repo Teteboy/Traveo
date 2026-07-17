@@ -427,9 +427,9 @@ export function RisksLegalPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-xs bg-slate-100">{item.author[0]}</AvatarFallback>
+                              <AvatarFallback className="text-xs bg-slate-100">{item.authorName[0]}</AvatarFallback>
                             </Avatar>
-                            <span className="text-slate-600">{item.author}</span>
+                            <span className="text-slate-600">{item.authorName}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-slate-600">{item.targetName}</td>
@@ -540,7 +540,7 @@ export function RisksLegalPage() {
                       </div>
                       <p className="text-sm text-slate-500">{case_.description}</p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                        <span>Utilisateur: <strong className="text-slate-700">{case_.user}</strong></span>
+                        <span>Utilisateur: <strong className="text-slate-700">{case_.userName}</strong></span>
                         <span>Créé: {new Date(case_.createdAt).toLocaleDateString('fr-FR')}</span>
                         {case_.deadline && (
                           <span className="text-orange-600">Échéance: {new Date(case_.deadline).toLocaleDateString('fr-FR')}</span>
@@ -666,10 +666,10 @@ export function RisksLegalPage() {
               {/* Header */}
               <div className="flex items-center gap-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarFallback className="bg-slate-100">{selectedItem.author[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-slate-100">{selectedItem.authorName[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium text-slate-900">{selectedItem.author}</p>
+                  <p className="font-medium text-slate-900">{selectedItem.authorName}</p>
                   <p className="text-sm text-slate-500">{selectedItem.authorId}</p>
                 </div>
               </div>

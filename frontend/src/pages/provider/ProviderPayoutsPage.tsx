@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DollarSign, Clock, CheckCircle, XCircle, Wallet, Plus, Eye } from 'lucide-react'
+import { DollarSign, Clock, Wallet, Plus, Eye } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { formatPrice } from '@/lib/formatters'
 import { toast } from 'sonner'
@@ -68,7 +67,7 @@ export function ProviderPayoutsPage() {
   })
 
   const payouts = payoutsQuery.data?.items ?? []
-  const earnings = earningsQuery.data?.data ?? earningsQuery.data
+  const earnings = earningsQuery.data?.data
   const availableBalance = earnings?.totalRevenue ?? 0
 
   const pendingPayouts = payouts.filter(p => p.status === 'PENDING' || p.status === 'PROCESSING')

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -37,13 +37,6 @@ interface ServiceItem {
   [key: string]: any
 }
 
-interface ServiceItemsResponse {
-  page: number
-  limit: number
-  total: number
-  items: ServiceItem[]
-}
-
 export function ProviderServicesPage() {
   const { currentServiceType, provider } = useProviderAuthStore()
   const isVerified = provider?.isVerified ?? false
@@ -52,7 +45,7 @@ export function ProviderServicesPage() {
   // Use the provider's registered business type for better context
   const providerBusinessType = provider?.businessType?.toLowerCase() || currentServiceType
 
-  const { data, isLoading, isError, error } = useQuery<ServicesResponse>({
+  const { data, isLoading, isError } = useQuery<ServicesResponse>({
     queryKey: ['provider-services'],
     queryFn: () => apiClient.get<ServicesResponse>('/providers/services?limit=100'),
   })
@@ -61,9 +54,9 @@ export function ProviderServicesPage() {
   const services = allServices.filter(s => s.type.toLowerCase() === currentServiceType)
 
   // Fetch service sub-items from dedicated API
-  const { data: itemsData, isLoading: itemsLoading, refetch: refetchItems } = useQuery<ServiceItemsResponse>({
+  const { data: itemsData, isLoading: itemsLoading } = useQuery<ServiceItem[]>({
     queryKey: ['provider-service-items', currentServiceType],
-    queryFn: () => {
+    queryFn: async () => {
       const endpointMap: Record<string, string> = {
         hotel: '/providers/service-items/hotel-rooms',
         restaurant: '/providers/service-items/menu-items',
@@ -72,12 +65,13 @@ export function ProviderServicesPage() {
         events: '/providers/service-items/event-spaces',
       }
       const endpoint = endpointMap[currentServiceType] || endpointMap.hotel
-      return apiClient.get<any>(endpoint)
+      const response = await apiClient.get<{ data: ServiceItem[] }>(endpoint)
+      return response.data
     },
     enabled: true, // Always try to fetch, show error if no service exists
   })
 
-  const items = itemsData?.data ?? itemsData?.items ?? []
+  const items = itemsData ?? []
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/providers/services/${id}`),
@@ -556,7 +550,6 @@ export function ProviderServicesPage() {
                     <Select
                       value={itemForm.roomType || ''}
                       onValueChange={(value) => {
-                        const selectedService = services.find(s => s.id === itemForm.serviceId)
                         const roomTypePricing: Record<string, number> = {
                           'Standard': 45000,
                           'Deluxe': 75000,

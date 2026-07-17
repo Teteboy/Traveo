@@ -197,6 +197,8 @@ export interface DashboardStats {
     total: number
     occupancyRate: number
   }
+  activeServices?: number
+  pendingBookings?: number
   checkinsToday: {
     count: number
     vipCount: number

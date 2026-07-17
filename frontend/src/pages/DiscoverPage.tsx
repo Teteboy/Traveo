@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { VideoCardCarousel } from '@/components/discover/VideoCardCarousel'
+import { VideoCardCarousel, type VideoItem as CarouselVideoItem } from '@/components/discover/VideoCardCarousel'
 import { useNavigate } from 'react-router-dom'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -49,6 +49,11 @@ export function DiscoverPage() {
   const filteredVideos = (data?.videos?.items ?? []).filter(video =>
     searchQuery === '' || video.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const displayVideos: CarouselVideoItem[] = filteredVideos.map(video => ({
+    ...video,
+    creator: video.creator ? { name: video.creator.name, avatar: video.creator.avatar ?? undefined } : undefined,
+  }))
 
   const toggleLike = (id: string) => setLikedVideos(p => { const s = new Set(p); s.has(id) ? s.delete(id) : s.add(id); return s })
   const toggleSave = (id: string) => setSavedVideos(p => { const s = new Set(p); s.has(id) ? s.delete(id) : s.add(id); return s })
@@ -192,14 +197,14 @@ export function DiscoverPage() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-[#010A09]">Vidéos populaires</h2>
-            <p className="text-slate-500">{isLoading ? '...' : `${filteredVideos.length} vidÃ©o(s)`}</p>
+            <p className="text-slate-500">{isLoading ? '...' : `${displayVideos.length} vidÃ©o(s)`}</p>
           </div>
 
           {isLoading ? (
             <div className="flex gap-4 overflow-hidden">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-96 w-72 flex-shrink-0 rounded-xl" />)}</div>
           ) : (
           <VideoCardCarousel
-            videos={filteredVideos}
+            videos={displayVideos}
             onLike={toggleLike}
             onSave={toggleSave}
             onShare={handleShare}

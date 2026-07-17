@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { Check, Loader2, Wallet, Smartphone, CreditCard, RadioIcon } from 'lucide-react'
+import { Check, Loader2, Wallet, Smartphone, RadioIcon } from 'lucide-react'
 import { formatPrice } from '@/lib/formatters'
 
 interface PaymentModalProps {

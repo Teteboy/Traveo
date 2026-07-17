@@ -63,6 +63,7 @@ type SponsoredContent = {
   clicks: number
   budget: number
   cost: number
+  ctr: number
   imageUrl?: string
   videoUrl?: string
   contentUrl?: string
@@ -323,7 +324,10 @@ export function GrowthMonetizationPage() {
     },
   })
 
-  const sponsoredContent = sponsoredData?.items || []
+  const sponsoredContent = (sponsoredData?.items || []).map(c => ({
+    ...c,
+    ctr: c.impressions ? Math.round((c.clicks / c.impressions) * 1000) / 10 : 0,
+  }))
   const partnerships = partnershipsData?.items || []
   const promotions = promotionsData?.items || []
   const total = activeTab === 'sponsored' ? sponsoredData?.total || 0 : activeTab === 'partnerships' ? partnershipsData?.total || 0 : promotionsData?.total || 0

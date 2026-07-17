@@ -16,12 +16,6 @@ type ProviderEarningsResponse = {
     commissionFees: number
     currency: string
   }
-} | {
-  totalRevenue: number
-  pendingPayments: number
-  avgBookingValue: number
-  commissionFees: number
-  currency: string
 }
 
 type ProviderBookingsResponse = {
@@ -70,7 +64,7 @@ export function ProviderEarningsPage() {
     queryFn: () => apiClient.get<ProviderBookingsResponse>('/providers/bookings?limit=20'),
   })
 
-  const totals = earningsQuery.data?.data ?? earningsQuery.data
+  const totals = earningsQuery.data?.data
   const currency = totals?.currency ?? 'XAF'
 
   return (

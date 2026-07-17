@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { useProviderAuthStore } from '@/stores/providerAuthStore'
 import { apiClient } from '@/lib/apiClient'
-import { User, Building2, Shield, CreditCard, Save, Edit, Download, Loader2, DollarSign } from 'lucide-react'
+import { User, Building2, Shield, CreditCard, Save, Loader2, DollarSign } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 
@@ -32,7 +32,7 @@ export function ProviderSettingsPage() {
   const { data: earningsData, isLoading: earningsLoading } = useQuery({
     queryKey: ['provider-earnings'],
     queryFn: async () => {
-      const response = await apiClient.get('/providers/earnings')
+      const response = await apiClient.get<{ data: { totalRevenue: number; pendingPayments: number; avgBookingValue: number; commissionFees: number; currency: string } }>('/providers/earnings')
       return response.data
     },
   })
@@ -41,8 +41,8 @@ export function ProviderSettingsPage() {
   const { data: payoutsData, isLoading: payoutsLoading } = useQuery({
     queryKey: ['provider-payouts'],
     queryFn: async () => {
-      const response = await apiClient.get('/providers/payouts')
-      return response.data
+      const response = await apiClient.get<{ items: any[] }>('/providers/payouts')
+      return response
     },
   })
 

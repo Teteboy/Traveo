@@ -11,7 +11,6 @@ import { DateRangePicker } from '@/components/ui/date-picker'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet'
 import { formatPrice } from '@/lib/formatters'
 import { useHotels, useDuffelHotels } from '@/hooks/useServices'
-import { useHotelRooms } from '@/hooks/useServiceItems'
 import { adaptHotel } from '@/lib/adapters'
 import { useQueries } from '@tanstack/react-query'
 

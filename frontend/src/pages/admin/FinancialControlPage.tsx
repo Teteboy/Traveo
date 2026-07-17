@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Wallet,
   TrendingUp,
@@ -62,125 +62,56 @@ const FALLBACK_STATS = {
   flaggedTransactions: 0,
 }
 
-const initialTransactions = [
-  {
-    id: 'TXN001',
-    type: 'booking',
-    description: 'Réservation vol Paris-Tokyo',
-    amount: 850,
-    currency: 'EUR',
-    status: 'completed',
-    userId: 'USR123',
-    userName: 'Jean Dupont',
-    createdAt: '2024-02-20T10:30:00',
-    paymentMethod: 'card',
-    commission: 42.50,
-  },
-  {
-    id: 'TXN002',
-    type: 'refund',
-    description: 'Remboursement hôtel Dubai',
-    amount: -320,
-    currency: 'EUR',
-    status: 'pending',
-    userId: 'USR456',
-    userName: 'Marie Martin',
-    createdAt: '2024-02-20T09:45:00',
-    paymentMethod: 'wallet',
-    reason: 'Annulation par le client',
-  },
-  {
-    id: 'TXN003',
-    type: 'payout',
-    description: 'Paiement prestataire - Guide Tokyo',
-    amount: -150,
-    currency: 'EUR',
-    status: 'processing',
-    userId: 'PRV789',
-    userName: 'Takeshi Yamamoto',
-    createdAt: '2024-02-20T08:00:00',
-    paymentMethod: 'bank_transfer',
-  },
-  {
-    id: 'TXN004',
-    type: 'deposit',
-    description: 'Recharge portefeuille',
-    amount: 500,
-    currency: 'EUR',
-    status: 'completed',
-    userId: 'USR321',
-    userName: 'Pierre Lambert',
-    createdAt: '2024-02-19T16:20:00',
-    paymentMethod: 'card',
-  },
-  {
-    id: 'TXN005',
-    type: 'fraud',
-    description: 'Activité suspecte détectée',
-    amount: 2500,
-    currency: 'EUR',
-    status: 'flagged',
-    userId: 'USR999',
-    userName: 'Compte Suspicious',
-    createdAt: '2024-02-19T14:00:00',
-    paymentMethod: 'card',
-    flagReason: 'Multiple failed attempts followed by large transaction',
-  },
-]
-
 interface Refund {
   id: string
   bookingId: string
   userName: string
   amount: number
+  currency: string
   reason: string
-  status: 'pending' | 'approved' | 'disputed'
+  status: string
   createdAt: string
   provider: string
-  providerNotified: boolean
+  providerNotified?: boolean
   disputeReason?: string
-  processedAt?: string
+  processedAt?: string | null
+  requestedAt?: string
 }
 
-const initialRefunds: Refund[] = [
-  {
-    id: 'REF001',
-    bookingId: 'BK12345',
-    userName: 'Jean Dupont',
-    amount: 320,
-    reason: 'Annulation vol',
-    status: 'pending',
-    createdAt: '2024-02-20T10:00:00',
-    provider: 'Air France',
-    providerNotified: true,
-  },
-  {
-    id: 'REF002',
-    bookingId: 'BK12346',
-    userName: 'Sophie Bernard',
-    amount: 150,
-    reason: 'Service non conforme',
-    status: 'disputed',
-    createdAt: '2024-02-19T15:30:00',
-    provider: 'Guide Tokyo',
-    providerNotified: true,
-    disputeReason: 'Client claims guide was late',
-  },
-  {
-    id: 'REF003',
-    bookingId: 'BK12347',
-    userName: 'Marc Leroy',
-    amount: 85,
-    reason: 'Événement annulé',
-    status: 'approved',
-    createdAt: '2024-02-18T09:00:00',
-    provider: 'Event Organizer',
-    providerNotified: true,
-    processedAt: '2024-02-19T10:00:00',
-  },
-]
+interface Transaction {
+  id: string
+  type: string
+  description: string
+  amount: number
+  currency: string
+  status: string
+  userId: string
+  userName: string
+  createdAt: string
+  paymentMethod: string
+  commission?: number
+  flagReason?: string
+}
 
-const initialDisputes = [
+interface Dispute {
+  id: string
+  transactionId: string
+  userName: string
+  amount: number
+  status: string
+  priority: string
+  createdAt: string
+  assignedTo: string
+  notes: string
+}
+
+interface Commission {
+  service: string
+  rate: number
+  revenue: number
+}
+
+const initialDisputes: Dispute[] = [
   {
     id: 'DSP001',
     transactionId: 'TXN005',
@@ -205,7 +136,7 @@ const initialDisputes = [
   },
 ]
 
-const initialCommissions = [
+const initialCommissions: Commission[] = [
   { service: 'Vols', rate: 5.5, revenue: 45000 },
   { service: 'Hôtels', rate: 12, revenue: 28000 },
   { service: 'Événements', rate: 8, revenue: 8500 },
@@ -246,39 +177,51 @@ export function FinancialControlPage() {
     flaggedTransactions: f.pendingRefundCount,
   } : FALLBACK_STATS
 
-  const transactions = (paymentsQuery.data?.data?.items || []).map((p: any) => ({
-    id: p.id,
-    type: 'booking',
-    description: `Réservation ${p.bookingId}`,
-    amount: p.amount,
-    currency: p.currency,
-    status: p.status,
-    userId: p.userName || '',
-    userName: p.userName || p.userEmail || 'Utilisateur',
-    createdAt: p.createdAt,
-    paymentMethod: 'card',
-    commission: Math.round(p.amount * 0.05),
-  }))
-
-  const refunds = (refundsQuery.data?.data?.items || []).map((r: any) => ({
-    id: r.id,
-    bookingId: r.bookingId,
-    amount: r.amount,
-    currency: r.currency,
-    reason: r.reason,
-    status: r.status,
-    requestedAt: r.createdAt,
-    processedAt: r.completedDate,
-    userName: r.booking?.user ? `${r.booking.user.firstName} ${r.booking.user.lastName}` : 'Utilisateur',
-  }))
-
-  const [disputes, setDisputes] = useState([])
-  const [commissions, setCommissions] = useState([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [refunds, setRefunds] = useState<Refund[]>([])
+  const [disputes, setDisputes] = useState<Dispute[]>(initialDisputes)
+  const [commissions, setCommissions] = useState<Commission[]>(initialCommissions)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTransaction, setSelectedTransaction] = useState<typeof transactions[0] | null>(null)
-  const [selectedRefund, setSelectedRefund] = useState<typeof refunds[0] | null>(null)
-  const [selectedDispute, setSelectedDispute] = useState<typeof disputes[0] | null>(null)
-  const [selectedCommission, setSelectedCommission] = useState<typeof commissions[0] | null>(null)
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  const [selectedRefund, setSelectedRefund] = useState<Refund | null>(null)
+  const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null)
+  const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null)
+
+  useEffect(() => {
+    if (paymentsQuery.data?.items) {
+      setTransactions(paymentsQuery.data.items.map(p => ({
+        id: p.id,
+        type: 'booking',
+        description: `Réservation ${p.bookingId}`,
+        amount: p.amount,
+        currency: p.currency,
+        status: p.status,
+        userId: p.userName || '',
+        userName: p.userName || p.userEmail || 'Utilisateur',
+        createdAt: p.createdAt,
+        paymentMethod: 'card',
+        commission: Math.round(p.amount * 0.05),
+      })))
+    }
+  }, [paymentsQuery.data])
+
+  useEffect(() => {
+    if (refundsQuery.data?.items) {
+      setRefunds(refundsQuery.data.items.map(r => ({
+        id: r.id,
+        bookingId: r.bookingId,
+        amount: r.amount,
+        currency: r.currency,
+        reason: r.reason,
+        status: r.status,
+        createdAt: r.createdAt,
+        requestedAt: r.createdAt,
+        processedAt: r.completedDate,
+        provider: 'N/A',
+        userName: r.booking?.user ? `${r.booking.user.firstName} ${r.booking.user.lastName}` : 'Utilisateur',
+      })))
+    }
+  }, [refundsQuery.data])
   const [showTransactionDetails, setShowTransactionDetails] = useState(false)
   const [showRefundDetails, setShowRefundDetails] = useState(false)
   const [showDisputeDetails, setShowDisputeDetails] = useState(false)
@@ -325,17 +268,17 @@ export function FinancialControlPage() {
   )
 
   // Handlers
-  const handleViewTransaction = (transaction: typeof transactions[0]) => {
+  const handleViewTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction)
     setShowTransactionDetails(true)
   }
 
-  const handleViewRefund = (refund: typeof refunds[0]) => {
+  const handleViewRefund = (refund: Refund) => {
     setSelectedRefund(refund)
     setShowRefundDetails(true)
   }
 
-  const handleViewDispute = (dispute: typeof disputes[0]) => {
+  const handleViewDispute = (dispute: Dispute) => {
     setSelectedDispute(dispute)
     setShowDisputeDetails(true)
   }
@@ -488,7 +431,7 @@ export function FinancialControlPage() {
     toast.success(`Litige ${selectedDispute.id} résolu`)
   }
 
-  const handleEditCommission = (commission: typeof commissions[0]) => {
+  const handleEditCommission = (commission: Commission) => {
     setSelectedCommission(commission)
     setCommissionForm({ service: commission.service, rate: commission.rate })
     setShowCommissionDialog(true)

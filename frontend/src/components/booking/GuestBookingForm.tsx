@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { User, Mail, Phone, Calendar, MapPin, Plane, Hotel, Utensils, Car, Calendar as CalendarIcon, AlertCircle } from 'lucide-react'
+import { User, Calendar, Plane, Hotel, Utensils, Car, Calendar as CalendarIcon, AlertCircle } from 'lucide-react'
 
 interface GuestBookingFormProps {
   serviceType: 'flight' | 'hotel' | 'guide' | 'restaurant' | 'events' | 'transport'
@@ -240,7 +240,7 @@ export function GuestBookingForm({
               <Checkbox
                 id="createAccount"
                 checked={formData.createAccount}
-                onCheckedChange={(checked) => setFormData({ ...formData, createAccount: checked as boolean })}
+                onCheckedChange={(checked: boolean | 'indeterminate') => setFormData({ ...formData, createAccount: checked === true })}
               />
               <div className="space-y-1">
                 <Label htmlFor="createAccount" className="font-medium cursor-pointer">

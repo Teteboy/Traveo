@@ -72,7 +72,7 @@ export function useHotelRooms(serviceId: string | undefined) {
     queryKey: ['hotel-rooms', serviceId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: HotelRoom[] }>(`/service-items/hotels/${serviceId}/rooms`)
-      return response.data?.data || response.data || []
+      return response.data || []
     },
     enabled: !!serviceId,
     staleTime: 5 * 60 * 1000,
@@ -84,7 +84,7 @@ export function useMenuItems(serviceId: string | undefined) {
     queryKey: ['menu-items', serviceId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: MenuItem[] }>(`/service-items/restaurants/${serviceId}/menu-items`)
-      return response.data?.data || response.data || []
+      return response.data || []
     },
     enabled: !!serviceId,
     staleTime: 5 * 60 * 1000,
@@ -96,7 +96,7 @@ export function useVehicles(serviceId: string | undefined) {
     queryKey: ['vehicles', serviceId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: Vehicle[] }>(`/service-items/transfers/${serviceId}/vehicles`)
-      return response.data?.data || response.data || []
+      return response.data || []
     },
     enabled: !!serviceId,
     staleTime: 5 * 60 * 1000,
@@ -108,7 +108,7 @@ export function useTours(serviceId: string | undefined) {
     queryKey: ['tours', serviceId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: Tour[] }>(`/service-items/guides/${serviceId}/tours`)
-      return response.data?.data || response.data || []
+      return response.data || []
     },
     enabled: !!serviceId,
     staleTime: 5 * 60 * 1000,
@@ -120,7 +120,7 @@ export function useEventSpaces(serviceId: string | undefined) {
     queryKey: ['event-spaces', serviceId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: EventSpace[] }>(`/service-items/events/${serviceId}/spaces`)
-      return response.data?.data || response.data || []
+      return response.data || []
     },
     enabled: !!serviceId,
     staleTime: 5 * 60 * 1000,

@@ -1,5 +1,4 @@
 import { MyVideosSection } from '@/components/profile/MyVideosSection'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Video } from 'lucide-react'
 
 export function ProviderVideosPage() {

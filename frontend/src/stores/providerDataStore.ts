@@ -146,7 +146,7 @@ export const useProviderDataStore = create<ProviderDataState>((set) => ({
 }))
 
 // Load provider dashboard data from real API
-export const loadProviderDashboardData = async (serviceType: ServiceType) => {
+export const loadProviderDashboardData = async (_serviceType: ServiceType) => {
   const { setDashboardStats, setRecentBookings } = useProviderDataStore.getState()
   try {
     const [statsRes, bookingsRes] = await Promise.all([
@@ -156,13 +156,15 @@ export const loadProviderDashboardData = async (serviceType: ServiceType) => {
     setDashboardStats({
       totalBookings: statsRes.data.totalBookings,
       totalRevenue: statsRes.data.totalRevenue,
+      activeServices: statsRes.data.activeServices,
+      pendingBookings: statsRes.data.pendingBookings,
       checkinsToday: { count: statsRes.data.pendingBookings, vipCount: 0 },
     })
-    setRecentBookings(bookingsRes.data?.items ?? bookingsRes.items ?? [])
+    setRecentBookings(bookingsRes.items ?? [])
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
     // Fallback to empty stats
-    setDashboardStats({ totalBookings: { count: 0, trend: { percentage: 0, direction: 'up' } }, totalRevenue: { amount: 0, currency: 'XAF', trend: { percentage: 0, direction: 'up' } }, checkinsToday: { count: 0, vipCount: 0 } })
+    setDashboardStats({ totalBookings: { count: 0, trend: { percentage: 0, direction: 'up' } }, totalRevenue: { amount: 0, currency: 'XAF', trend: { percentage: 0, direction: 'up' } }, activeServices: 0, pendingBookings: 0, checkinsToday: { count: 0, vipCount: 0 } })
     setRecentBookings([])
   }
 }
