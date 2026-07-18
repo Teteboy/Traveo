@@ -75,7 +75,6 @@ interface VisaRequirements {
   requiresInvitation: boolean;
   fee: {
     xaf: number;
-    eur: number;
   } | null;
   processingDays: number;
   requirements: Array<{
@@ -436,7 +435,7 @@ export function VisaPage() {
                         <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                           <p className="text-sm text-blue-800">
                             <span className="font-medium">Frais et délai:</span><br/>
-                            {requirements.fee ? `${(requirements.fee.eur).toFixed(2)} € (≈ ${requirements.fee.xaf.toLocaleString()} XAF)` : 'Variable'}<br/>
+                            {requirements.fee ? formatPrice(requirements.fee.xaf, 'XAF') : 'Variable'}<br/>
                             Délai: {requirements.processingDays} jours ouvrés
                           </p>
                         </div>
@@ -448,7 +447,7 @@ export function VisaPage() {
                             Frais de e-Visa
                           </div>
                           <div className="text-2xl font-bold text-[#44DBD4]">
-                            {requirements.fee ? `${(requirements.fee.eur).toFixed(2)} € (≈ ${requirements.fee.xaf.toLocaleString()} XAF)` : 'Variable'}
+                            {requirements.fee ? formatPrice(requirements.fee.xaf, 'XAF') : 'Variable'}
                           </div>
                           <div className="text-xs text-muted-foreground mt-1">
                             Délai de traitement: {requirements.processingDays} jours ouvrés

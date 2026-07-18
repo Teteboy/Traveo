@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAdminServices, useUpdateAdminService, useDeleteAdminService } from '@/hooks/useAdmin'
+import { formatPrice } from '@/lib/formatters'
 import {
   Ticket,
   Search,
@@ -13,7 +14,7 @@ import {
   AlertTriangle,
   Calendar,
   Users,
-  DollarSign,
+  Banknote,
   MapPin,
   Shield,
   FileText,
@@ -699,7 +700,7 @@ export function EventsGovernancePage() {
                         <td className="px-6 py-4 text-slate-600">
                           {new Date(event.date).toLocaleDateString('fr-FR')}
                         </td>
-                        <td className="px-6 py-4 text-slate-600">{event.price} ¥</td>
+                        <td className="px-6 py-4 text-slate-600">{formatPrice(event.price, 'XAF')}</td>
                         <td className="px-6 py-4">
                           <Badge className={`${statusInfo.color} flex items-center gap-1 w-fit`}>
                             <StatusIcon className="h-3 w-3" />
@@ -986,8 +987,8 @@ export function EventsGovernancePage() {
                   <span className="text-slate-600">Capacité: {selectedEvent.capacity} | Vendus: {selectedEvent.ticketsSold}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <DollarSign className="h-4 w-4 text-slate-400" />
-                  <span className="text-slate-600">{selectedEvent.price} ¥ par billet</span>
+                  <Banknote className="h-4 w-4 text-slate-400" />
+                  <span className="text-slate-600">{formatPrice(selectedEvent.price, 'XAF')} par billet</span>
                 </div>
               </div>
 

@@ -490,7 +490,7 @@ export function FinancialControlPage() {
                 <Wallet className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{(financialStats.totalBalance / 1000).toFixed(0)}K ¥</p>
+                <p className="text-2xl font-bold text-slate-900">{(financialStats.totalBalance / 1000).toFixed(0)}K FCFA</p>
                 <p className="text-xs text-slate-500">Balance totale</p>
               </div>
             </div>
@@ -503,7 +503,7 @@ export function FinancialControlPage() {
                 <TrendingUp className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{(financialStats.monthlyRevenue / 1000).toFixed(0)}K ¥</p>
+                <p className="text-2xl font-bold text-slate-900">{(financialStats.monthlyRevenue / 1000).toFixed(0)}K FCFA</p>
                 <p className="text-xs text-slate-500">Revenus mensuels</p>
               </div>
             </div>
@@ -516,7 +516,7 @@ export function FinancialControlPage() {
                 <Clock className="h-5 w-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{(financialStats.pendingSettlements / 1000).toFixed(0)}K ¥</p>
+                <p className="text-2xl font-bold text-slate-900">{(financialStats.pendingSettlements / 1000).toFixed(0)}K FCFA</p>
                 <p className="text-xs text-slate-500">En attente</p>
               </div>
             </div>
@@ -557,7 +557,7 @@ export function FinancialControlPage() {
                 <Percent className="h-4 w-4 text-slate-500" />
                 <span className="text-sm text-slate-600">Commissions totales</span>
               </div>
-              <span className="font-semibold text-slate-900">{(financialStats.totalCommissions / 1000).toFixed(1)}K ¥</span>
+              <span className="font-semibold text-slate-900">{(financialStats.totalCommissions / 1000).toFixed(1)}K FCFA</span>
             </div>
           </CardContent>
         </Card>
@@ -568,7 +568,7 @@ export function FinancialControlPage() {
                 <RefreshCw className="h-4 w-4 text-slate-500" />
                 <span className="text-sm text-slate-600">Remboursements en attente</span>
               </div>
-              <span className="font-semibold text-slate-900">{(financialStats.pendingRefunds / 1000).toFixed(1)}K ¥</span>
+              <span className="font-semibold text-slate-900">{(financialStats.pendingRefunds / 1000).toFixed(1)}K FCFA</span>
             </div>
           </CardContent>
         </Card>
@@ -706,7 +706,7 @@ export function FinancialControlPage() {
                         <td className="px-6 py-4 text-slate-600">{tx.userName}</td>
                         <td className="px-6 py-4">
                           <span className={`font-semibold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {tx.amount >= 0 ? '+' : ''}{tx.amount} ¥
+                            {tx.amount >= 0 ? '+' : ''}{tx.amount} FCFA
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -799,7 +799,7 @@ export function FinancialControlPage() {
                     <tr key={refund.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 font-mono text-sm text-slate-600">{refund.id}</td>
                       <td className="px-6 py-4 text-slate-900">{refund.userName}</td>
-                      <td className="px-6 py-4 font-semibold text-red-600">-{refund.amount} ¥</td>
+                      <td className="px-6 py-4 font-semibold text-red-600">-{refund.amount} FCFA</td>
                       <td className="px-6 py-4 text-slate-600">{refund.reason}</td>
                       <td className="px-6 py-4 text-slate-600">{refund.provider}</td>
                       <td className="px-6 py-4">
@@ -863,7 +863,7 @@ export function FinancialControlPage() {
                       <p className="text-slate-900 font-medium">{dispute.userName}</p>
                       <p className="text-sm text-slate-500 mt-1">{dispute.notes}</p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                        <span>Montant: <strong className="text-slate-700">{dispute.amount} ¥</strong></span>
+                        <span>Montant: <strong className="text-slate-700">{dispute.amount} FCFA</strong></span>
                         <span>Assigné à: <strong className="text-slate-700">{dispute.assignedTo}</strong></span>
                         <span>Créé: {new Date(dispute.createdAt).toLocaleDateString('fr-FR')}</span>
                       </div>
@@ -897,7 +897,7 @@ export function FinancialControlPage() {
                 <div key={item.service} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
                     <p className="font-medium text-slate-900">{item.service}</p>
-                    <p className="text-sm text-slate-500">Revenus: {item.revenue.toLocaleString()} ¥</p>
+                    <p className="text-sm text-slate-500">Revenus: {item.revenue.toLocaleString()} FCFA</p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-[#44DBD4]">{item.rate}%</p>
@@ -918,7 +918,7 @@ export function FinancialControlPage() {
                   <Clock className="h-5 w-5" />
                   <span className="font-semibold">Paiements en attente</span>
                 </div>
-                <p className="text-2xl font-bold text-yellow-800">{(financialStats.pendingSettlements / 1000).toFixed(0)}K ¥</p>
+                <p className="text-2xl font-bold text-yellow-800">{(financialStats.pendingSettlements / 1000).toFixed(0)}K FCFA</p>
                 <p className="text-sm text-yellow-600 mt-1">12 prestataires en attente</p>
               </div>
               <div className="flex gap-3">
@@ -954,7 +954,7 @@ export function FinancialControlPage() {
                 </div>
                 <div className="text-right">
                   <p className={`text-2xl font-bold ${selectedTransaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {selectedTransaction.amount >= 0 ? '+' : ''}{selectedTransaction.amount} ¥
+                    {selectedTransaction.amount >= 0 ? '+' : ''}{selectedTransaction.amount} FCFA
                   </p>
                   <Badge className={transactionStatus[selectedTransaction.status as keyof typeof transactionStatus].color}>
                     {transactionStatus[selectedTransaction.status as keyof typeof transactionStatus].label}
@@ -989,7 +989,7 @@ export function FinancialControlPage() {
                   {selectedTransaction.commission && (
                     <div>
                       <p className="text-sm text-slate-500">Commission</p>
-                      <p className="text-slate-900">{selectedTransaction.commission} ¥</p>
+                      <p className="text-slate-900">{selectedTransaction.commission} FCFA</p>
                     </div>
                   )}
                 </div>
@@ -1036,7 +1036,7 @@ export function FinancialControlPage() {
                   <p className="text-sm text-slate-500">Booking: {selectedRefund.bookingId}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-red-600">-{selectedRefund.amount} ¥</p>
+                  <p className="text-2xl font-bold text-red-600">-{selectedRefund.amount} FCFA</p>
                   <Badge className={
                     selectedRefund.status === 'approved' ? 'bg-green-100 text-green-700' :
                     selectedRefund.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
@@ -1110,7 +1110,7 @@ export function FinancialControlPage() {
                   <p className="text-sm text-slate-500">Transaction: {selectedDispute.transactionId}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-slate-900">{selectedDispute.amount} ¥</p>
+                  <p className="text-2xl font-bold text-slate-900">{selectedDispute.amount} FCFA</p>
                   <Badge className={
                     selectedDispute.priority === 'high' ? 'bg-red-100 text-red-700' :
                     'bg-yellow-100 text-yellow-700'
@@ -1204,8 +1204,8 @@ export function FinancialControlPage() {
                 <Input type="number" value={commissionForm.rate} onChange={(e) => setCommissionForm({ ...commissionForm, rate: Number(e.target.value) })} step="0.1" min="0" max="100" />
               </div>
               <div className="p-3 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-600">Revenus actuels: {selectedCommission?.revenue.toLocaleString()} ¥</p>
-                <p className="text-sm text-slate-600">Nouveaux revenus estimés: {Math.round((selectedCommission?.revenue || 0) * commissionForm.rate / (selectedCommission?.rate || 1)).toLocaleString()} ¥</p>
+                <p className="text-sm text-slate-600">Revenus actuels: {selectedCommission?.revenue.toLocaleString()} FCFA</p>
+                <p className="text-sm text-slate-600">Nouveaux revenus estimés: {Math.round((selectedCommission?.revenue || 0) * commissionForm.rate / (selectedCommission?.rate || 1)).toLocaleString()} FCFA</p>
               </div>
             </div>
           </div>
@@ -1237,7 +1237,7 @@ export function FinancialControlPage() {
                     <p className="text-sm text-slate-500">{item.date}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-slate-900">{item.amount.toLocaleString()} ¥</p>
+                    <p className="font-semibold text-slate-900">{item.amount.toLocaleString()} FCFA</p>
                     <Badge className={item.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}>
                       {item.status === 'scheduled' ? 'Planifié' : 'En attente'}
                     </Badge>
@@ -1257,7 +1257,7 @@ export function FinancialControlPage() {
         <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle>Traiter les paiements</DialogTitle>
-            <DialogDescription>12 prestataires en attente pour un total de {financialStats.pendingSettlements.toLocaleString()} ¥</DialogDescription>
+            <DialogDescription>12 prestataires en attente pour un total de {financialStats.pendingSettlements.toLocaleString()} FCFA</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1354,7 +1354,7 @@ export function FinancialControlPage() {
         <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle>Approuver le remboursement</DialogTitle>
-            <DialogDescription>Approuver le remboursement de {selectedRefund?.amount} ¥ pour {selectedRefund?.userName} ?</DialogDescription>
+            <DialogDescription>Approuver le remboursement de {selectedRefund?.amount} FCFA pour {selectedRefund?.userName} ?</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowApproveRefundDialog(false)}>Annuler</Button>

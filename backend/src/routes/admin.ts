@@ -184,7 +184,7 @@ router.get('/flights', async (req: Request, res: Response, next) => {
                 stops,
                 priceEconomy: parseFloat(offer.total_amount ?? '0'),
                 priceBusiness: null,
-                currency: offer.total_currency ?? 'USD',
+                currency: 'XAF',
                 availableSeats: offer.available_services?.length ?? 150,
                 isActive: true,
                 isDuffel: true,

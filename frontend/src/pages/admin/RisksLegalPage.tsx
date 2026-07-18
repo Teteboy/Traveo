@@ -546,7 +546,7 @@ export function RisksLegalPage() {
                           <span className="text-orange-600">Échéance: {new Date(case_.deadline).toLocaleDateString('fr-FR')}</span>
                         )}
                         {case_.amount && (
-                          <span>Montant: <strong className="text-slate-700">{case_.amount}¥</strong></span>
+                          <span>Montant: <strong className="text-slate-700">{case_.amount} FCFA</strong></span>
                         )}
                       </div>
                     </div>

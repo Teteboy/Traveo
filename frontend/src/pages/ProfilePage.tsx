@@ -97,7 +97,7 @@ export function ProfilePage() {
   const [languageForm, setLanguageForm] = useState({
     language: 'fr',
     region: 'FR',
-    currency: 'EUR',
+    currency: 'XAF',
     timezone: 'Europe/Paris',
   })
 
@@ -735,11 +735,7 @@ export function ProfilePage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EUR">Euro (€)</SelectItem>
-                  <SelectItem value="USD">Dollar US ($)</SelectItem>
-                  <SelectItem value="GBP">Livre sterling (£)</SelectItem>
-                  <SelectItem value="MAD">Dirham marocain (MAD)</SelectItem>
-                  <SelectItem value="TND">Dinar tunisien (TND)</SelectItem>
+                  <SelectItem value="XAF">FCFA (XAF)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -327,7 +327,7 @@ export function RefundManagement() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Montant (€)</label>
+              <label className="text-sm font-medium">Montant (FCFA)</label>
               <Input
                 type="number"
                 placeholder="0.00"

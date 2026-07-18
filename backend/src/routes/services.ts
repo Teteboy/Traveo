@@ -269,7 +269,7 @@ hotelsRouter.get('/search/duffel', async (req: Request, res: Response, next) => 
         location: r.accommodation?.location?.address?.line_one ?? location,
         country: r.accommodation?.location?.address?.country_code ?? '',
         price: parseFloat(r.cheapest_rate_total_amount ?? '0'),
-        currency: r.cheapest_rate_currency ?? 'XAF',
+        currency: 'XAF',
         amenities: r.accommodation?.amenities ?? [],
       }))
 

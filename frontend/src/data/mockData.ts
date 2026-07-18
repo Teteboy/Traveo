@@ -370,7 +370,7 @@ export const mockFlights: Flight[] = [
       economy: 450,
       business: 1200
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 24
   },
@@ -396,7 +396,7 @@ export const mockFlights: Flight[] = [
       economy: 520,
       business: 1850
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 18
   },
@@ -422,7 +422,7 @@ export const mockFlights: Flight[] = [
       economy: 280,
       business: 890
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 32
   },
@@ -448,7 +448,7 @@ export const mockFlights: Flight[] = [
       economy: 390,
       business: 1100
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 28
   },
@@ -474,7 +474,7 @@ export const mockFlights: Flight[] = [
       economy: 120,
       business: 450
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 45
   },
@@ -500,7 +500,7 @@ export const mockFlights: Flight[] = [
       economy: 145,
       business: 520
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 38
   },
@@ -526,7 +526,7 @@ export const mockFlights: Flight[] = [
       economy: 190,
       business: 680
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 26
   },
@@ -552,7 +552,7 @@ export const mockFlights: Flight[] = [
       economy: 165,
       business: 590
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 34
   },
@@ -578,7 +578,7 @@ export const mockFlights: Flight[] = [
       economy: 110,
       business: 420
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 42
   },
@@ -604,7 +604,7 @@ export const mockFlights: Flight[] = [
       economy: 680,
       business: 3200
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 15
   },
@@ -630,7 +630,7 @@ export const mockFlights: Flight[] = [
       economy: 890,
       business: 4500
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 12
   },
@@ -656,7 +656,7 @@ export const mockFlights: Flight[] = [
       economy: 520,
       business: 1650
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 0,
     availableSeats: 22
   },
@@ -682,7 +682,7 @@ export const mockFlights: Flight[] = [
       economy: 750,
       business: 2400
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 1,
     availableSeats: 18
   },
@@ -708,7 +708,7 @@ export const mockFlights: Flight[] = [
       economy: 920,
       business: 4200
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 1,
     availableSeats: 14
   },
@@ -734,7 +734,7 @@ export const mockFlights: Flight[] = [
       economy: 180,
       business: 520
     },
-    currency: 'EUR',
+    currency: 'XAF',
     stops: 1,
     availableSeats: 30
   }
@@ -752,7 +752,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-04-20',
     endDate: '2024-04-23',
     price: 75,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Musique',
     availableTickets: 500
   },
@@ -766,7 +766,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-04-14',
     endDate: '2024-04-14',
     price: 120,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Sport',
     availableTickets: 200
   },
@@ -780,7 +780,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-06-15',
     endDate: '2024-06-18',
     price: 85,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Musique',
     availableTickets: 300
   },
@@ -794,7 +794,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-06-09',
     endDate: '2024-06-09',
     price: 350,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Sport',
     availableTickets: 50
   },
@@ -808,7 +808,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-05-01',
     endDate: '2024-08-31',
     price: 45,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Culture',
     availableTickets: 800
   },
@@ -822,7 +822,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-05-15',
     endDate: '2024-05-15',
     price: 65,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Culture',
     availableTickets: 150
   },
@@ -836,7 +836,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-07-10',
     endDate: '2024-07-13',
     price: 95,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Gastronomie',
     availableTickets: 400
   },
@@ -850,7 +850,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-06-20',
     endDate: '2024-06-20',
     price: 180,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Culture',
     availableTickets: 100
   },
@@ -864,7 +864,7 @@ export const mockEvents: Event[] = [
     startDate: '2025-02-28',
     endDate: '2025-03-04',
     price: 250,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Festival',
     availableTickets: 1000
   },
@@ -878,7 +878,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-12-15',
     endDate: '2024-12-31',
     price: 120,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Festival',
     availableTickets: 600
   },
@@ -892,7 +892,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-05-26',
     endDate: '2024-05-26',
     price: 850,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Sport',
     availableTickets: 30
   },
@@ -906,7 +906,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-06-16',
     endDate: '2024-06-17',
     price: 35,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Culture',
     availableTickets: 250
   },
@@ -920,7 +920,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-05-14',
     endDate: '2024-05-14',
     price: 450,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Culture',
     availableTickets: 75
   },
@@ -934,7 +934,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-08-10',
     endDate: '2024-08-10',
     price: 125,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Musique',
     availableTickets: 180
   },
@@ -948,7 +948,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-07-20',
     endDate: '2024-07-20',
     price: 380,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Aventure',
     availableTickets: 40
   },
@@ -962,7 +962,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-09-05',
     endDate: '2024-09-08',
     price: 140,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Musique',
     availableTickets: 450
   },
@@ -976,7 +976,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-06-25',
     endDate: '2024-06-25',
     price: 155,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Gastronomie',
     availableTickets: 60
   },
@@ -990,7 +990,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-05-30',
     endDate: '2024-05-30',
     price: 85,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Culture',
     availableTickets: 25
   },
@@ -1004,7 +1004,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-11-29',
     endDate: '2024-12-07',
     price: 95,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Culture',
     availableTickets: 320
   },
@@ -1018,7 +1018,7 @@ export const mockEvents: Event[] = [
     startDate: '2024-12-31',
     endDate: '2024-12-31',
     price: 450,
-    currency: 'EUR',
+    currency: 'XAF',
     category: 'Festival',
     availableTickets: 500
   }
@@ -1036,7 +1036,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.7,
     reviewCount: 1248,
     price: 120,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Parking', 'Salle de sport'],
     starRating: 5,
     availableRooms: 12
@@ -1051,7 +1051,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.5,
     reviewCount: 892,
     price: 180,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Petit-déjeuner', 'Bar', 'Climatisation', 'Room service'],
     starRating: 4,
     availableRooms: 8
@@ -1066,7 +1066,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.8,
     reviewCount: 654,
     price: 95,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Petit-déjeuner', 'Terrasse', 'Hammam', 'Restaurant'],
     starRating: 4,
     availableRooms: 5
@@ -1081,7 +1081,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.9,
     reviewCount: 2156,
     price: 850,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Plage privée', 'Butler', 'Héliport'],
     starRating: 5,
     availableRooms: 3
@@ -1096,7 +1096,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.6,
     reviewCount: 421,
     price: 140,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Golf', 'Plage', 'Sports nautiques'],
     starRating: 5,
     availableRooms: 15
@@ -1111,7 +1111,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.7,
     reviewCount: 1564,
     price: 280,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Restaurant', 'Bar', 'Salle de sport', 'Parking', 'Room service'],
     starRating: 4,
     availableRooms: 20
@@ -1126,7 +1126,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.9,
     reviewCount: 987,
     price: 320,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Spa', 'Restaurant', 'Bar', 'Concierge', 'Parking'],
     starRating: 5,
     availableRooms: 7
@@ -1141,7 +1141,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.6,
     reviewCount: 745,
     price: 195,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Jardins', 'Golf', 'Parking'],
     starRating: 5,
     availableRooms: 18
@@ -1156,7 +1156,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.7,
     reviewCount: 1023,
     price: 245,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Bar', 'Spa', 'Plage', 'Nightclub'],
     starRating: 5,
     availableRooms: 11
@@ -1171,7 +1171,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.8,
     reviewCount: 568,
     price: 215,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Jardins', 'Bar', 'Parking'],
     starRating: 5,
     availableRooms: 9
@@ -1186,7 +1186,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.9,
     reviewCount: 1342,
     price: 395,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Restaurant', 'Bar', 'Spa', 'Terrasse', 'Room service', 'Concierge'],
     starRating: 5,
     availableRooms: 6
@@ -1201,7 +1201,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.8,
     reviewCount: 1876,
     price: 425,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Bar', 'Salle de sport', 'Concierge'],
     starRating: 5,
     availableRooms: 8
@@ -1216,7 +1216,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.8,
     reviewCount: 2345,
     price: 550,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Restaurant', 'Bar', 'Spa', 'Salle de sport', 'Concierge', 'Butler'],
     starRating: 5,
     availableRooms: 5
@@ -1231,7 +1231,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.9,
     reviewCount: 1523,
     price: 480,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Bar', 'Salle de sport', 'Bibliothèque'],
     starRating: 5,
     availableRooms: 7
@@ -1246,7 +1246,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.9,
     reviewCount: 876,
     price: 385,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Yoga', 'Activités culturelles', 'Butler'],
     starRating: 5,
     availableRooms: 10
@@ -1261,7 +1261,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.8,
     reviewCount: 543,
     price: 425,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Plage privée', 'Sports nautiques', 'Butler'],
     starRating: 5,
     availableRooms: 6
@@ -1276,7 +1276,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.5,
     reviewCount: 432,
     price: 165,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Casino', 'Spa', 'Salle de sport', 'Bowling'],
     starRating: 5,
     availableRooms: 14
@@ -1291,7 +1291,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.9,
     reviewCount: 1234,
     price: 450,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant', 'Spa', 'Jardins', 'Bar', 'Concierge', 'Hammam'],
     starRating: 5,
     availableRooms: 4
@@ -1306,7 +1306,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.7,
     reviewCount: 3456,
     price: 380,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Aquaventure', 'Restaurant', 'Plage', 'Aquarium', 'Spa'],
     starRating: 5,
     availableRooms: 22
@@ -1321,7 +1321,7 @@ export const mockHotels: Hotel[] = [
     rating: 4.9,
     reviewCount: 987,
     price: 650,
-    currency: 'EUR',
+    currency: 'XAF',
     amenities: ['Wi-Fi', 'Piscine', 'Restaurant 3 étoiles', 'Spa', 'Jardin', 'Bar', 'Concierge'],
     starRating: 5,
     availableRooms: 3
@@ -1342,7 +1342,7 @@ export const mockGuides: Guide[] = [
     languages: ['Français', 'Anglais', 'Wolof'],
     specialties: ['Histoire', 'Culture', 'Gastronomie'],
     pricePerHour: 25,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD002',
@@ -1356,7 +1356,7 @@ export const mockGuides: Guide[] = [
     languages: ['Français', 'Anglais', 'Espagnol'],
     specialties: ['Architecture', 'Art', 'Histoire'],
     pricePerHour: 45,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD003',
@@ -1370,7 +1370,7 @@ export const mockGuides: Guide[] = [
     languages: ['Français', 'Arabe', 'Anglais'],
     specialties: ['Culture', 'Shopping', 'Gastronomie'],
     pricePerHour: 30,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD004',
@@ -1384,7 +1384,7 @@ export const mockGuides: Guide[] = [
     languages: ['Arabe', 'Anglais', 'Français', 'Hindi'],
     specialties: ['Shopping', 'Architecture moderne', 'Culture'],
     pricePerHour: 55,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD005',
@@ -1398,7 +1398,7 @@ export const mockGuides: Guide[] = [
     languages: ['Turc', 'Anglais', 'Français', 'Allemand'],
     specialties: ['Histoire', 'Architecture', 'Religion'],
     pricePerHour: 35,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD006',
@@ -1412,7 +1412,7 @@ export const mockGuides: Guide[] = [
     languages: ['Arabe', 'Anglais', 'Français'],
     specialties: ['Égyptologie', 'Histoire ancienne', 'Archéologie'],
     pricePerHour: 40,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD007',
@@ -1426,7 +1426,7 @@ export const mockGuides: Guide[] = [
     languages: ['Espagnol', 'Catalan', 'Anglais', 'Français'],
     specialties: ['Architecture', 'Art', 'Histoire'],
     pricePerHour: 38,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD008',
@@ -1440,7 +1440,7 @@ export const mockGuides: Guide[] = [
     languages: ['Portugais', 'Anglais', 'Espagnol'],
     specialties: ['Culture', 'Musique', 'Gastronomie'],
     pricePerHour: 32,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD009',
@@ -1454,7 +1454,7 @@ export const mockGuides: Guide[] = [
     languages: ['Italien', 'Anglais', 'Français', 'Espagnol'],
     specialties: ['Histoire romaine', 'Archéologie', 'Art'],
     pricePerHour: 42,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD010',
@@ -1468,7 +1468,7 @@ export const mockGuides: Guide[] = [
     languages: ['Anglais', 'Français', 'Allemand'],
     specialties: ['Histoire royale', 'Architecture', 'Culture'],
     pricePerHour: 48,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD011',
@@ -1482,7 +1482,7 @@ export const mockGuides: Guide[] = [
     languages: ['Anglais', 'Chinois', 'Espagnol'],
     specialties: ['Histoire', 'Architecture', 'Culture urbaine'],
     pricePerHour: 50,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD012',
@@ -1496,7 +1496,7 @@ export const mockGuides: Guide[] = [
     languages: ['Japonais', 'Anglais', 'Français'],
     specialties: ['Culture', 'Temples', 'Gastronomie'],
     pricePerHour: 45,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD013',
@@ -1510,7 +1510,7 @@ export const mockGuides: Guide[] = [
     languages: ['Indonésien', 'Anglais', 'Japonais'],
     specialties: ['Culture', 'Religion', 'Nature'],
     pricePerHour: 28,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD014',
@@ -1524,7 +1524,7 @@ export const mockGuides: Guide[] = [
     languages: ['Swahili', 'Anglais', 'Français'],
     specialties: ['Safari', 'Faune', 'Nature'],
     pricePerHour: 35,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'GD015',
@@ -1538,7 +1538,7 @@ export const mockGuides: Guide[] = [
     languages: ['Français', 'Anglais', 'Baoulé'],
     specialties: ['Culture', 'Histoire', 'Art'],
     pricePerHour: 22,
-    currency: 'EUR'
+    currency: 'XAF'
   }
 ]
 
@@ -1554,9 +1554,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.6,
     reviewCount: 324,
     cuisine: 'Sénégalaise',
-    priceRange: '€€€',
+    priceRange: 'FFF',
     averagePrice: 35,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS002',
@@ -1568,9 +1568,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.9,
     reviewCount: 892,
     cuisine: 'Française',
-    priceRange: '€€€€',
+    priceRange: 'FFFF',
     averagePrice: 180,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS003',
@@ -1582,9 +1582,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.7,
     reviewCount: 456,
     cuisine: 'Marocaine',
-    priceRange: '€€',
+    priceRange: 'FF',
     averagePrice: 45,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS004',
@@ -1596,9 +1596,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.8,
     reviewCount: 678,
     cuisine: 'Fruits de mer',
-    priceRange: '€€€€',
+    priceRange: 'FFFF',
     averagePrice: 150,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS005',
@@ -1610,9 +1610,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.7,
     reviewCount: 523,
     cuisine: 'Turque moderne',
-    priceRange: '€€€',
+    priceRange: 'FFF',
     averagePrice: 85,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS006',
@@ -1624,9 +1624,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.6,
     reviewCount: 387,
     cuisine: 'Égyptienne',
-    priceRange: '€€',
+    priceRange: 'FF',
     averagePrice: 28,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS007',
@@ -1638,9 +1638,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.8,
     reviewCount: 712,
     cuisine: 'Tapas modernes',
-    priceRange: '€€€',
+    priceRange: 'FFF',
     averagePrice: 65,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS008',
@@ -1652,9 +1652,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.5,
     reviewCount: 1243,
     cuisine: 'Internationale',
-    priceRange: '€€',
+    priceRange: 'FF',
     averagePrice: 25,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS009',
@@ -1666,9 +1666,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.9,
     reviewCount: 456,
     cuisine: 'Italienne gastronomique',
-    priceRange: '€€€€',
+    priceRange: 'FFFF',
     averagePrice: 220,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS010',
@@ -1680,9 +1680,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.7,
     reviewCount: 2134,
     cuisine: 'Indienne',
-    priceRange: '€€',
+    priceRange: 'FF',
     averagePrice: 35,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS011',
@@ -1694,9 +1694,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.9,
     reviewCount: 876,
     cuisine: 'Américaine contemporaine',
-    priceRange: '€€€€',
+    priceRange: 'FFFF',
     averagePrice: 295,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS012',
@@ -1708,9 +1708,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.9,
     reviewCount: 543,
     cuisine: 'Sushi',
-    priceRange: '€€€€',
+    priceRange: 'FFFF',
     averagePrice: 350,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS013',
@@ -1722,9 +1722,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.8,
     reviewCount: 312,
     cuisine: 'Fusion asiatique',
-    priceRange: '€€€',
+    priceRange: 'FFF',
     averagePrice: 75,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS014',
@@ -1736,9 +1736,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.7,
     reviewCount: 624,
     cuisine: 'Fruits de mer',
-    priceRange: '€€€',
+    priceRange: 'FFF',
     averagePrice: 55,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS015',
@@ -1750,9 +1750,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.5,
     reviewCount: 267,
     cuisine: 'Ivoirienne',
-    priceRange: '€€',
+    priceRange: 'FF',
     averagePrice: 32,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS016',
@@ -1764,9 +1764,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.6,
     reviewCount: 398,
     cuisine: 'Fusion méditerranéenne',
-    priceRange: '€€€',
+    priceRange: 'FFF',
     averagePrice: 48,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS017',
@@ -1778,9 +1778,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.8,
     reviewCount: 756,
     cuisine: 'Française moderne',
-    priceRange: '€€€€',
+    priceRange: 'FFFF',
     averagePrice: 145,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS018',
@@ -1792,9 +1792,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.6,
     reviewCount: 934,
     cuisine: 'Steakhouse',
-    priceRange: '€€€€',
+    priceRange: 'FFFF',
     averagePrice: 185,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS019',
@@ -1806,9 +1806,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.7,
     reviewCount: 432,
     cuisine: 'Sénégalaise',
-    priceRange: '€€',
+    priceRange: 'FF',
     averagePrice: 28,
-    currency: 'EUR'
+    currency: 'XAF'
   },
   {
     id: 'RS020',
@@ -1820,9 +1820,9 @@ export const mockRestaurants: Restaurant[] = [
     rating: 4.8,
     reviewCount: 623,
     cuisine: 'Française contemporaine',
-    priceRange: '€€€',
+    priceRange: 'FFF',
     averagePrice: 75,
-    currency: 'EUR'
+    currency: 'XAF'
   }
 ]
 
@@ -1853,7 +1853,7 @@ export const mockTransfers: Transfer[] = [
     country: 'Sénégal',
     duration: '45min',
     price: 35,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 4,
     imageUrl: 'https://picsum.photos/400/300?random=60'
   },
@@ -1867,7 +1867,7 @@ export const mockTransfers: Transfer[] = [
     country: 'France',
     duration: '8h',
     price: 320,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 3,
     imageUrl: 'https://picsum.photos/400/300?random=61'
   },
@@ -1881,7 +1881,7 @@ export const mockTransfers: Transfer[] = [
     country: 'France',
     duration: '3 jours',
     price: 250,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 5,
     imageUrl: 'https://picsum.photos/400/300?random=62'
   },
@@ -1895,7 +1895,7 @@ export const mockTransfers: Transfer[] = [
     country: 'Émirats Arabes Unis',
     duration: '30min',
     price: 75,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 6,
     imageUrl: 'https://picsum.photos/400/300?random=63'
   },
@@ -1909,7 +1909,7 @@ export const mockTransfers: Transfer[] = [
     country: 'France',
     duration: '3h20',
     price: 95,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 1,
     imageUrl: 'https://picsum.photos/400/300?random=64'
   },
@@ -1923,7 +1923,7 @@ export const mockTransfers: Transfer[] = [
     country: 'Maroc',
     duration: '2h30',
     price: 12,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 1,
     imageUrl: 'https://picsum.photos/400/300?random=65'
   },
@@ -1937,7 +1937,7 @@ export const mockTransfers: Transfer[] = [
     country: 'Turquie',
     duration: '45min',
     price: 40,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 4,
     imageUrl: 'https://picsum.photos/400/300?random=66'
   },
@@ -1951,7 +1951,7 @@ export const mockTransfers: Transfer[] = [
     country: 'Japon',
     duration: '6h',
     price: 280,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 4,
     imageUrl: 'https://picsum.photos/400/300?random=67'
   },
@@ -1965,7 +1965,7 @@ export const mockTransfers: Transfer[] = [
     country: 'Indonésie',
     duration: '2 jours',
     price: 25,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 2,
     imageUrl: 'https://picsum.photos/400/300?random=68'
   },
@@ -1979,7 +1979,7 @@ export const mockTransfers: Transfer[] = [
     country: 'États-Unis',
     duration: '50min',
     price: 85,
-    currency: 'EUR',
+    currency: 'XAF',
     capacity: 4,
     imageUrl: 'https://picsum.photos/600/400?random=69'
   }

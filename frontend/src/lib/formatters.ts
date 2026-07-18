@@ -27,7 +27,7 @@ export function formatDateTime(datetime: string | Date): string {
 }
 
 // Price formatting
-export function formatPrice(amount: number, currency: string = 'EUR'): string {
+export function formatPrice(amount: number, currency: string = 'XAF'): string {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: currency,

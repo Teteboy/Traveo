@@ -62,7 +62,7 @@ function formatOffer(offer: any) {
     stops,
     priceEconomy: parseFloat(offer.total_amount ?? '0'),
     priceBusiness: null,
-    currency: offer.total_currency ?? 'XAF',
+    currency: 'XAF',
     availableSeats: offer.available_services?.length ?? 150,
     conditions: offer.conditions ?? {},
   }
@@ -200,7 +200,7 @@ router.post('/book', authenticate, async (req: Request, res: Response, next) => 
       console.log('📋 Fetched offer:', { id: offer.id, total_amount: offer.total_amount, currency: offer.total_currency, passengers: offer.passengers })
 
       bookingAmount = parseFloat(offer.total_amount ?? '0')
-      bookingCurrency = offer.total_currency ?? 'USD'
+      bookingCurrency = 'XAF'
 
       // For instant bookings, we need to match passenger structure from the offer
       try {

@@ -76,7 +76,7 @@ router.post('/campay/initialize', async (req: Request, res: Response, next) => {
                 userId: booking.userId,
                 type: 'payment',
                 title: 'Paiement confirmé',
-                message: `Votre paiement de ${amount / 100} ${currency ?? 'XAF'} a été accepté.`,
+                message: `Votre paiement de ${(amount / 100).toLocaleString('fr-FR')} FCFA a été accepté.`,
                 metadata: { bookingId, paymentId: payment.id },
               },
             })

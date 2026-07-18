@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DollarSign, Clock, Wallet, Plus, Eye } from 'lucide-react'
+import { Banknote, Clock, Wallet, Plus, Eye } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { formatPrice } from '@/lib/formatters'
 import { toast } from 'sonner'
@@ -130,7 +130,7 @@ export function ProviderPayoutsPage() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-sm font-medium text-slate-600">Revenu total</h3>
-              <DollarSign className="h-5 w-5 text-green-600" />
+              <Banknote className="h-5 w-5 text-green-600" />
             </div>
             <p className="text-2xl font-bold mb-2">{formatPrice(availableBalance, 'XAF')}</p>
             <p className="text-sm text-slate-500">Revenus confirmés</p>

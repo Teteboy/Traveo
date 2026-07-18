@@ -164,7 +164,7 @@ export function WalletPage() {
           ) : (
             <div className="text-5xl font-bold mb-1">{formatPrice(balance, currency)}</div>
           )}
-          <p className="text-white/80 text-sm mt-1">{currency} â€” Portefeuille Traveo</p>
+          <p className="text-white/80 text-sm mt-1">FCFA â€” Portefeuille Traveo</p>
         </CardContent>
       </Card>
 

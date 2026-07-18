@@ -159,7 +159,7 @@ router.get('/:countryCode/requirements', async (req: Request, res: Response, nex
       visaRequired: config?.visaRequired ?? true,
       eVisaAvailable: config?.eVisaAvailable ?? false,
       requiresInvitation: config?.requiresInvitation ?? false,
-      fee: config ? { xaf: config.feeXAF, eur: config.feeEUR } : null,
+      fee: config ? { xaf: config.feeXAF } : null,
       processingDays: config?.processingDays ?? 10,
       requirements
     }))

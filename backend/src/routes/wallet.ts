@@ -135,7 +135,7 @@ router.post('/add-funds', authenticate, async (req: Request, res: Response, next
         userId: req.user!.userId,
         type: 'payment',
         title: 'Recharge réussie',
-        message: `${(amountInMajor).toLocaleString()} ${txCurrency} ajoutés à votre portefeuille.`,
+        message: `${(amountInMajor).toLocaleString('fr-FR')} FCFA ajoutés à votre portefeuille.`,
       },
     })
 
@@ -193,7 +193,7 @@ router.post('/pay', authenticate, async (req: Request, res: Response, next) => {
         userId: req.user!.userId,
         type: 'payment',
         title: 'Paiement confirmé',
-        message: `Votre paiement de ${booking.totalAmount.toLocaleString()} ${booking.currency} a été débité de votre portefeuille.`,
+        message: `Votre paiement de ${booking.totalAmount.toLocaleString('fr-FR')} FCFA a été débité de votre portefeuille.`,
         metadata: { bookingId: booking.id, paymentId: payment.id },
       },
     })

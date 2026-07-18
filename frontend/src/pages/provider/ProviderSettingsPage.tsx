@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { useProviderAuthStore } from '@/stores/providerAuthStore'
 import { apiClient } from '@/lib/apiClient'
-import { User, Building2, Shield, CreditCard, Save, Loader2, DollarSign } from 'lucide-react'
+import { User, Building2, Shield, CreditCard, Save, Loader2, Banknote } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 
@@ -333,7 +333,7 @@ export function ProviderSettingsPage() {
               <div>
                 <Label htmlFor="payoutAmount">Amount</Label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="payoutAmount"
                     type="number"

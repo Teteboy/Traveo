@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, MapPin, Star, Euro, SlidersHorizontal, Users, CheckCircle, Loader2, Filter, DollarSign, Utensils, UtensilsCrossed } from 'lucide-react'
+import { Search, MapPin, Star, Banknote, SlidersHorizontal, Users, CheckCircle, Loader2, Filter, Utensils, UtensilsCrossed } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -29,10 +29,10 @@ import { useQueries } from '@tanstack/react-query'
 
 const priceRanges = [
   { value: 'all', label: 'Tous les prix' },
-  { value: '0-30', label: '0 - 30 ¥' },
-  { value: '30-60', label: '30 - 60 ¥' },
-  { value: '60-100', label: '60 - 100 ¥' },
-  { value: '100+', label: 'Plus de 100 ¥' },
+  { value: '0-30', label: '0 - 30 FCFA' },
+  { value: '30-60', label: '30 - 60 FCFA' },
+  { value: '60-100', label: '60 - 100 FCFA' },
+  { value: '100+', label: 'Plus de 100 FCFA' },
 ]
 
 const ratingFilters = [
@@ -345,7 +345,7 @@ export function RestaurantsPage() {
                         Prix moyen
                       </div>
                       <div className="text-2xl font-bold text-[#44DBD4] flex items-center gap-1">
-                        <Euro className="h-5 w-5" />
+                        <Banknote className="h-5 w-5" />
                         {formatPrice(restaurant.averagePrice, restaurant.currency)}
                       </div>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
@@ -378,7 +378,7 @@ export function RestaurantsPage() {
             {/* Price Range */}
             <div className="space-y-3">
               <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-[#44DBD4]" />
+                <Banknote className="h-4 w-4 text-[#44DBD4]" />
                 Prix moyen
               </label>
               <Select 

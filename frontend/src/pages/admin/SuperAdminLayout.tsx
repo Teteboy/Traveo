@@ -17,7 +17,7 @@ import {
   Bell,
   LogOut,
   ChevronRight,
-  DollarSign,
+  Banknote,
   FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -57,7 +57,7 @@ const navigationItems = [
   {
     id: 'payouts',
     label: 'Gestion des paiements',
-    icon: DollarSign,
+    icon: Banknote,
     path: '/admin/payouts',
     description: 'Demandes de paiement des prestataires',
   },

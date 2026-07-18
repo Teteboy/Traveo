@@ -157,7 +157,7 @@ export function SettingsPage() {
                 <label className="text-sm font-medium mb-1 block">Devise</label>
                 <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="XAF">FCFA (XAF)</SelectItem><SelectItem value="EUR">Euro (EUR)</SelectItem><SelectItem value="USD">Dollar (USD)</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="XAF">FCFA (XAF)</SelectItem></SelectContent>
                 </Select>
               </div>
               <div>

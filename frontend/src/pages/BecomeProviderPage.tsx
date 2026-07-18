@@ -13,7 +13,7 @@ import {
   AlertCircle,
   ChevronRight,
   Star,
-  DollarSign,
+  Banknote,
   Users,
   Upload,
 } from 'lucide-react'
@@ -263,7 +263,7 @@ export function BecomeProviderPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <DollarSign className="h-5 w-5 text-green-600" />
+                  <Banknote className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-900">Revenus attractifs</h3>

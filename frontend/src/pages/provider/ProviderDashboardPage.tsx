@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import {
   Receipt,
-  DollarSign,
+  Banknote,
   Bed,
   UserCheck,
   TrendingUp,
@@ -175,7 +175,7 @@ export function ProviderDashboardPage() {
                 {businessType === 'EVENTS' && 'Revenus ce mois'}
               </h3>
               <div className="p-2 bg-green-50 rounded-lg">
-                <DollarSign className="h-5 w-5 text-green-600" />
+                <Banknote className="h-5 w-5 text-green-600" />
               </div>
             </div>
             <p className="text-2xl font-bold mb-2">

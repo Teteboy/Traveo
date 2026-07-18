@@ -125,7 +125,7 @@ export function adaptRestaurant(s: ApiServiceItem): Restaurant & { providerId?: 
     rating: s.rating,
     reviewCount: s.reviewCount,
     cuisine: (meta.cuisine as string) ?? 'Internationale',
-    priceRange: (meta.priceRange as string) ?? '$$',
+    priceRange: ((meta.priceRange as string) ?? 'FF').replace(/[€$]/g, 'F'),
     averagePrice: s.price,
     currency: s.currency,
     providerId: s.providerId,

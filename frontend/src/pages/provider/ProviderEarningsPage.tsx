@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DollarSign, Clock, TrendingUp, Receipt, Wallet, Eye } from 'lucide-react'
+import { Banknote, Clock, TrendingUp, Receipt, Wallet, Eye } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { formatPrice } from '@/lib/formatters'
 
@@ -94,7 +94,7 @@ export function ProviderEarningsPage() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-sm font-medium text-slate-600">Total Revenue</h3>
-              <DollarSign className="h-5 w-5 text-green-600" />
+              <Banknote className="h-5 w-5 text-green-600" />
             </div>
             <p className="text-2xl font-bold mb-2">{formatPrice(totals?.totalRevenue ?? 0, currency)}</p>
             <div className="flex items-center gap-1 text-sm text-green-600">

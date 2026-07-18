@@ -48,7 +48,7 @@ async function main() {
   })
   await prisma.walletAccount.upsert({
     where: { userId: user2.id }, update: {},
-    create: { userId: user2.id, balance: 150000, currency: 'EUR' },
+    create: { userId: user2.id, balance: 150000, currency: 'XAF' },
   })
   const providerWallet = await prisma.walletAccount.upsert({
     where: { userId: providerUser.id }, update: {},

@@ -19,17 +19,15 @@ export const useWalletStore = create<WalletState>()(
   persist(
     (set, get) => ({
       balances: [
-        { currency: 'EUR', amount: 500 },
-        { currency: 'USD', amount: 300 },
-        { currency: 'XOF', amount: 150000 },
+        { currency: 'XAF', amount: 150000 },
       ],
       transactions: [
         {
           id: 'TRX001',
           userId: '1',
           type: 'credit',
-          amount: 500,
-          currency: 'EUR',
+          amount: 50000,
+          currency: 'XAF',
           description: 'Rechargement de compte',
           status: 'completed',
           createdAt: new Date().toISOString(),

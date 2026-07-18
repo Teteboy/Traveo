@@ -9,7 +9,7 @@ import {
   Trash2,
   Eye,
   Download,
-  DollarSign,
+  Banknote,
   Star,
   Building2,
   Image,
@@ -417,10 +417,10 @@ export function GrowthMonetizationPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-orange-600" />
+                <Banknote className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{(stats.totalRevenue / 1000).toFixed(1)}K¥</p>
+                <p className="text-2xl font-bold text-slate-900">{(stats.totalRevenue / 1000).toFixed(1)}K FCFA</p>
                 <p className="text-xs text-slate-500">Revenus pub</p>
               </div>
             </div>
@@ -583,7 +583,7 @@ export function GrowthMonetizationPage() {
                         <td className="px-6 py-4 text-slate-600">{content.ctr}%</td>
                         <td className="px-6 py-4">
                           <div className="text-slate-600">
-                            {content.cost} / {content.budget} ¥
+                            {content.cost} / {content.budget} FCFA
                           </div>
                           <div className="h-1.5 w-20 bg-slate-200 rounded-full mt-1">
                             <div 
@@ -683,7 +683,7 @@ export function GrowthMonetizationPage() {
 
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="text-center p-2 bg-slate-50 rounded">
-                    <p className="text-lg font-semibold text-slate-900">{(partner.revenue / 1000).toFixed(0)}K¥</p>
+                    <p className="text-lg font-semibold text-slate-900">{(partner.revenue / 1000).toFixed(0)}K FCFA</p>
                     <p className="text-xs text-slate-500">Revenus</p>
                   </div>
                   <div className="text-center p-2 bg-slate-50 rounded">
@@ -774,7 +774,7 @@ export function GrowthMonetizationPage() {
                       <td className="px-6 py-4 text-slate-600">{promo.description}</td>
                       <td className="px-6 py-4">
                         <Badge variant="outline" className="border-green-200 text-green-700">
-                          {promo.discountType === 'percentage' ? `${promo.discount}%` : `${promo.discount}¥`}
+                          {promo.discountType === 'percentage' ? `${promo.discount}%` : `${promo.discount} FCFA`}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-slate-600">
@@ -845,7 +845,7 @@ export function GrowthMonetizationPage() {
                   <p className="text-xs text-slate-500">Taux de clic</p>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <p className="text-2xl font-bold text-slate-900">{selectedContent.cost}¥</p>
+                  <p className="text-2xl font-bold text-slate-900">{selectedContent.cost} FCFA</p>
                   <p className="text-xs text-slate-500">Dépense</p>
                 </div>
               </div>
@@ -864,7 +864,7 @@ export function GrowthMonetizationPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Budget total</span>
-                  <span className="text-slate-900">{selectedContent.budget}¥</span>
+                  <span className="text-slate-900">{selectedContent.budget} FCFA</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Date début</span>
@@ -956,7 +956,7 @@ export function GrowthMonetizationPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="budget">Budget (¥)</Label>
+              <Label htmlFor="budget">Budget (FCFA)</Label>
               <Input id="budget" type="number" value={contentForm.budget} onChange={(e) => setContentForm({ ...contentForm, budget: Number(e.target.value) })} />
             </div>
             <div className="space-y-2">

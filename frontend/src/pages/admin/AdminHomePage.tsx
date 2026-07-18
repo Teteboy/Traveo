@@ -7,7 +7,7 @@ import {
   Plane,
   Hotel,
   Ticket,
-  DollarSign,
+  Banknote,
   CheckCircle,
   Clock,
   ArrowUpRight,
@@ -177,7 +177,7 @@ export function AdminHomePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-slate-200"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-slate-500">Utilisateurs totaux</p><p className="text-2xl font-bold text-slate-900">{statsData.totalUsers.toLocaleString()}</p><div className="flex items-center mt-1 text-sm text-green-600"><ArrowUpRight className="h-4 w-4 mr-1" />+{statsData.userGrowth}% ce mois</div></div><div className="p-3 bg-blue-100 rounded-full"><Users className="h-6 w-6 text-blue-600" /></div></div></CardContent></Card>
         <Card className="border-slate-200"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-slate-500">Réservations totales</p><p className="text-2xl font-bold text-slate-900">{statsData.totalBookings.toLocaleString()}</p><div className="flex items-center mt-1 text-sm text-green-600"><ArrowUpRight className="h-4 w-4 mr-1" />+{statsData.bookingGrowth}% ce mois</div></div><div className="p-3 bg-green-100 rounded-full"><Ticket className="h-6 w-6 text-green-600" /></div></div></CardContent></Card>
-        <Card className="border-slate-200"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-slate-500">Revenus</p><p className="text-2xl font-bold text-slate-900">{formatPrice(statsData.totalRevenue, 'XAF')}</p><div className="flex items-center mt-1 text-sm text-green-600"><ArrowUpRight className="h-4 w-4 mr-1" />+{statsData.revenueGrowth}% ce mois</div></div><div className="p-3 bg-purple-100 rounded-full"><DollarSign className="h-6 w-6 text-purple-600" /></div></div></CardContent></Card>
+        <Card className="border-slate-200"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-slate-500">Revenus</p><p className="text-2xl font-bold text-slate-900">{formatPrice(statsData.totalRevenue, 'XAF')}</p><div className="flex items-center mt-1 text-sm text-green-600"><ArrowUpRight className="h-4 w-4 mr-1" />+{statsData.revenueGrowth}% ce mois</div></div><div className="p-3 bg-purple-100 rounded-full"><Banknote className="h-6 w-6 text-purple-600" /></div></div></CardContent></Card>
         <Card className="border-slate-200"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-slate-500">Prestataires actifs</p><p className="text-2xl font-bold text-slate-900">{statsData.activeProviders}</p><div className="flex items-center mt-1 text-sm text-orange-600"><Clock className="h-4 w-4 mr-1" />{statsData.pendingProviders} en attente</div></div><div className="p-3 bg-orange-100 rounded-full"><Hotel className="h-6 w-6 text-orange-600" /></div></div></CardContent></Card>
       </div>
 
@@ -241,7 +241,7 @@ export function AdminHomePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-slate-200 bg-gradient-to-br from-blue-50 to-white"><CardContent className="p-6"><div className="flex items-center gap-4"><div className="p-3 bg-blue-500 rounded-lg"><Users className="h-6 w-6 text-white" /></div><div><p className="text-sm text-slate-500">Nouveaux utilisateurs aujourd'hui</p><p className="text-2xl font-bold text-slate-900">{statsData.newUsersToday}</p></div></div></CardContent></Card>
         <Card className="border-slate-200 bg-gradient-to-br from-green-50 to-white"><CardContent className="p-6"><div className="flex items-center gap-4"><div className="p-3 bg-green-500 rounded-lg"><Ticket className="h-6 w-6 text-white" /></div><div><p className="text-sm text-slate-500">Réservations aujourd'hui</p><p className="text-2xl font-bold text-slate-900">{statsData.bookingsToday}</p></div></div></CardContent></Card>
-        <Card className="border-slate-200 bg-gradient-to-br from-purple-50 to-white"><CardContent className="p-6"><div className="flex items-center gap-4"><div className="p-3 bg-purple-500 rounded-lg"><DollarSign className="h-6 w-6 text-white" /></div><div><p className="text-sm text-slate-500">Revenus aujourd'hui</p><p className="text-2xl font-bold text-slate-900">{formatPrice(statsData.revenueToday, 'XAF')}</p></div></div></CardContent></Card>
+        <Card className="border-slate-200 bg-gradient-to-br from-purple-50 to-white"><CardContent className="p-6"><div className="flex items-center gap-4"><div className="p-3 bg-purple-500 rounded-lg"><Banknote className="h-6 w-6 text-white" /></div><div><p className="text-sm text-slate-500">Revenus aujourd'hui</p><p className="text-2xl font-bold text-slate-900">{formatPrice(statsData.revenueToday, 'XAF')}</p></div></div></CardContent></Card>
       </div>
 
       <Card className="border-slate-200">
