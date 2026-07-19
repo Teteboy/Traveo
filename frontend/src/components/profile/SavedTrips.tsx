@@ -21,42 +21,6 @@ interface SavedTrip {
   }
 }
 
-const mockSavedTrips: SavedTrip[] = [
-  {
-    id: 'trip1',
-    name: 'Vacances d\'été à Zanzibar',
-    destination: 'Zanzibar, Tanzanie',
-    image: 'https://images.unsplash.com/photo-1519659528533-284347c5f1f0?w=400',
-    startDate: '2024-07-15',
-    endDate: '2024-07-25',
-    travelers: 2,
-    status: 'upcoming',
-    elements: { flights: 2, hotels: 1, events: 3 }
-  },
-  {
-    id: 'trip2',
-    name: 'Weekend à Paris',
-    destination: 'Paris, France',
-    image: 'https://images.unsplash.com/photo-1502602898657-3e71761fdabc?w=400',
-    startDate: '2024-03-10',
-    endDate: '2024-03-12',
-    travelers: 4,
-    status: 'completed',
-    elements: { flights: 2, hotels: 1, events: 2 }
-  },
-  {
-    id: 'trip3',
-    name: 'Aventure à Bali',
-    destination: 'Bali, Indonésie',
-    image: 'https://images.unsplash.com/photo-1537996193727-0a7e0f2d4b6b?w=400',
-    startDate: '2024-09-01',
-    endDate: '2024-09-14',
-    travelers: 2,
-    status: 'draft',
-    elements: { flights: 0, hotels: 0, events: 0 }
-  }
-]
-
 const statusConfig = {
   upcoming: {
     label: 'À venir',
@@ -77,7 +41,7 @@ const statusConfig = {
 }
 
 export function SavedTrips() {
-  const [trips, setTrips] = useState<SavedTrip[]>(mockSavedTrips)
+  const [trips, setTrips] = useState<SavedTrip[]>([])
 
   const handleDelete = (id: string) => {
     setTrips(prev => prev.filter(t => t.id !== id))

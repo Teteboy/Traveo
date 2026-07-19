@@ -56,8 +56,8 @@ export function HotelsPage() {
       return h.starRating >= parseInt(filters.starRating)
     })
     .sort((a, b) => {
-      if (filters.sortBy === 'price_asc') return a.price - b.price
-      if (filters.sortBy === 'price_desc') return b.price - a.price
+      if (filters.sortBy === 'price_asc') return (roomsInfoMap.get(a.id)?.minPrice ?? a.price) - (roomsInfoMap.get(b.id)?.minPrice ?? b.price)
+      if (filters.sortBy === 'price_desc') return (roomsInfoMap.get(b.id)?.minPrice ?? b.price) - (roomsInfoMap.get(a.id)?.minPrice ?? a.price)
       if (filters.sortBy === 'rating_desc') return b.rating - a.rating
       return 0
     })
@@ -76,7 +76,13 @@ export function HotelsPage() {
       staleTime: 5 * 60 * 1000,
     }))
   })
-  const roomsCountMap = new Map(hotelIds.map((id, i) => [id, (roomsQueries[i].data ?? []).length]))
+  const roomsInfoMap = new Map(
+    hotelIds.map((id, i) => {
+      const rooms = (roomsQueries[i].data ?? []) as { price: number; currency?: string }[]
+      const minPrice = rooms.length > 0 ? Math.min(...rooms.map(r => r.price)) : undefined
+      return [id, { count: rooms.length, minPrice, currency: rooms[0]?.currency }]
+    })
+  )
 
   const toggleSave = (id: string) => {
     setSavedHotels(prev => {
@@ -232,12 +238,12 @@ export function HotelsPage() {
                         <div className="flex flex-col items-end gap-3 shrink-0">
                           <div className="text-right">
                             <div className="text-sm text-muted-foreground mb-1">À partir de</div>
-                            <div className="text-3xl font-bold text-[#44DBD4]">{formatPrice(hotel.price, hotel.currency)}</div>
+                            <div className="text-3xl font-bold text-[#44DBD4]">{formatPrice(roomsInfoMap.get(hotel.id)?.minPrice ?? hotel.price, roomsInfoMap.get(hotel.id)?.currency ?? hotel.currency)}</div>
                             <div className="text-xs text-muted-foreground">par nuit</div>
                           </div>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Bed className="h-4 w-4" />
-                            <span>{roomsCountMap.get(hotel.id) || 0} chambres</span>
+                            <span>{roomsInfoMap.get(hotel.id)?.count || 0} chambres</span>
                           </div>
                           <Button className="w-full bg-[#44DBD4] hover:bg-[#3bc9c2] text-white">Voir les chambres</Button>
                         </div>

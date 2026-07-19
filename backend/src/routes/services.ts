@@ -4,6 +4,7 @@
  */
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/prisma.js'
+import { Prisma } from '@prisma/client'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { createError } from '../middleware/error.js'
 import { ok, getPagination, paginated } from '../types.js'
@@ -64,10 +65,24 @@ function makeServiceRouter(serviceType: 'HOTEL' | 'GUIDE' | 'TRANSPORT' | 'RESTA
 
       const { 
         checkInDate, checkOutDate, guests, startDate, endDate, reservationDate, covers, paymentMethod,
+        roomId, roomCount,
         // Guest booking fields
         guestEmail, guestPhone, guestName, guestCountry,
         createAccount, password
       } = req.body
+
+      let totalAmount = item.price
+      let bookingMetadata: Record<string, unknown> = { checkInDate, checkOutDate, guests, startDate, endDate, reservationDate, covers, paymentMethod }
+      if (serviceType === 'HOTEL' && roomId) {
+        const room = await prisma.hotelRoom.findFirst({ where: { id: roomId as string, serviceId: item.id, isActive: true } })
+        if (!room) throw createError('Room not found', 404, 'NOT_FOUND')
+        const nights = (checkInDate && checkOutDate)
+          ? Math.max(1, Math.ceil((new Date(checkOutDate as string).getTime() - new Date(checkInDate as string).getTime()) / (1000 * 60 * 60 * 24)))
+          : 1
+        const count = Math.max(1, Number(roomCount) || 1)
+        totalAmount = room.price * nights * count
+        bookingMetadata = { ...bookingMetadata, roomId: room.id, roomName: room.name, roomCount: count, nights }
+      }
 
       let userId: string | null = null
       let autoRegistered = false
@@ -121,9 +136,9 @@ function makeServiceRouter(serviceType: 'HOTEL' | 'GUIDE' | 'TRANSPORT' | 'RESTA
           serviceId: item.id,
           providerId: item.providerId ?? undefined,
           status: 'PENDING_PAYMENT',
-          totalAmount: item.price,
+          totalAmount,
           currency: item.currency,
-          metadata: { checkInDate, checkOutDate, guests, startDate, endDate, reservationDate, covers, paymentMethod },
+          metadata: bookingMetadata as unknown as Prisma.InputJsonValue,
           isGuest: !userId,
           guestEmail,
           guestPhone,

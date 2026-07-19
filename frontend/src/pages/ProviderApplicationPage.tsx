@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import {
   Building2,
   Utensils,
@@ -43,6 +44,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { apiClient, setTokens } from '@/lib/apiClient'
+import { useAuthStore } from '@/stores/authStore'
 
 const providerTypes = [
   {
@@ -89,19 +92,40 @@ const providerTypes = [
   },
 ]
 
-const mockExistingApplications = [
-  {
-    id: '1',
-    type: 'restaurant',
-    businessName: 'Le Petit Bistro',
-    status: 'pending',
-    submittedAt: '2024-02-18',
-    reviewDate: null,
-  },
-]
+const businessTypeMap: Record<string, string> = {
+  hotel: 'HOTEL',
+  restaurant: 'RESTAURANT',
+  guide: 'GUIDE',
+  event: 'EVENTS',
+  transfer: 'TRANSPORT',
+  activity: 'EVENTS',
+}
+
+const frontendTypeMap: Record<string, string> = {
+  HOTEL: 'hotel',
+  RESTAURANT: 'restaurant',
+  GUIDE: 'guide',
+  EVENTS: 'event',
+  TRANSPORT: 'transfer',
+}
+
+type ProviderStatusResponse = {
+  data: {
+    isProvider: boolean
+    provider: {
+      id: string
+      companyName: string
+      businessType: string
+      isVerified: boolean
+      verificationProgress: number
+      createdAt: string
+    } | null
+  }
+}
 
 export function ProviderApplicationPage() {
   const navigate = useNavigate()
+  const updateUser = useAuthStore((state) => state.updateUser)
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [showApplicationForm, setShowApplicationForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -127,15 +151,45 @@ export function ProviderApplicationPage() {
     setShowApplicationForm(true)
   }
 
+  const providerStatusQuery = useQuery<ProviderStatusResponse>({
+    queryKey: ['provider-status'],
+    queryFn: () => apiClient.get<ProviderStatusResponse>('/auth/provider-status'),
+    staleTime: 60 * 1000,
+  })
+
+  const provider = providerStatusQuery.data?.data?.provider
+
+  const existingApplications = provider
+    ? [{
+        id: provider.id,
+        type: frontendTypeMap[provider.businessType] ?? 'hotel',
+        businessName: provider.companyName,
+        status: provider.isVerified ? 'approved' : 'pending',
+        submittedAt: provider.createdAt,
+        reviewDate: null
+      }]
+    : []
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!selectedType) return
+    const businessType = businessTypeMap[selectedType]
+    if (!businessType) return
+
     setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    setIsSubmitting(false)
-    setSubmitted(true)
+    try {
+      const res = await apiClient.post<{ data: { tokens: { accessToken: string; refreshToken: string } } }>('/auth/become-provider', {
+        companyName: formData.businessName,
+        businessType,
+        description: formData.description,
+      })
+      setTokens(res.data.tokens.accessToken, res.data.tokens.refreshToken)
+      updateUser({ role: 'provider' })
+      setIsSubmitting(false)
+      setSubmitted(true)
+    } catch (err: unknown) {
+      setIsSubmitting(false)
+    }
   }
 
   const selectedProvider = providerTypes.find(p => p.id === selectedType)
@@ -228,11 +282,11 @@ export function ProviderApplicationPage() {
       </div>
 
       {/* Existing Applications */}
-      {mockExistingApplications.length > 0 && (
+      {existingApplications.length > 0 && (
         <div className="container mx-auto max-w-4xl px-4 mt-8">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Vos demandes en cours</h2>
           <div className="space-y-3">
-            {mockExistingApplications.map((app) => (
+            {existingApplications.map((app) => (
               <Card key={app.id} className="border-slate-200">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">

@@ -5,8 +5,7 @@
  *  - shared request/response TypeScript types
  *  - a centralized endpoint builder (paths + base URL)
  *
- * The app currently uses mock data. When backend is integrated,
- * these contracts are the source of truth for payload shapes.
+ * These contracts are the source of truth for backend payload shapes.
  */
 
 export type ISODateString = string

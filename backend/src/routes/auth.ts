@@ -305,7 +305,8 @@ router.get('/provider-status', authenticate, async (_req: Request, res: Response
         companyName: provider.companyName,
         businessType: provider.businessType,
         isVerified: provider.isVerified,
-        verificationProgress: provider.verificationProgress
+        verificationProgress: provider.verificationProgress,
+        createdAt: provider.createdAt
       } : null
     }))
   } catch (err) { next(err) }

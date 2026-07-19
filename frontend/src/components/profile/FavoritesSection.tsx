@@ -18,56 +18,6 @@ interface Favorite {
   savedDate: string
 }
 
-const mockFavorites: Favorite[] = [
-  {
-    id: 'fav1',
-    type: 'destination',
-    name: 'Zanzibar, Tanzanie',
-    subtitle: 'Plages paradisiaques',
-    image: 'https://images.unsplash.com/photo-1519659528533-284347c5f1f0?w=400',
-    rating: 4.8,
-    savedDate: '2024-02-01'
-  },
-  {
-    id: 'fav2',
-    type: 'flight',
-    name: 'Paris CDG - Tokyo NRT',
-    subtitle: 'À partir de 650',
-    savedDate: '2024-01-28'
-  },
-  {
-    id: 'fav3',
-    type: 'hotel',
-    name: 'Hôtel Royal Beach',
-    subtitle: 'Zanzibar, Tanzanie',
-    image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400',
-    rating: 4.6,
-    price: 180,
-    currency: 'TND',
-    savedDate: '2024-01-25'
-  },
-  {
-    id: 'fav4',
-    type: 'event',
-    name: 'Festival de la Musique',
-    subtitle: 'Paris, France - 15 Mars 2024',
-    image: 'https://images.unsplash.com/photo-1459749411175-04bf529c15b?w=400',
-    rating: 4.9,
-    price: 45,
-    currency: 'TND',
-    savedDate: '2024-01-20'
-  },
-  {
-    id: 'fav5',
-    type: 'destination',
-    name: 'Bali, Indonésie',
-    subtitle: 'Culture et nature',
-    image: 'https://images.unsplash.com/photo-1537996193727-0a7e0f2d4b6b?w=400',
-    rating: 4.7,
-    savedDate: '2024-01-15'
-  }
-]
-
 const typeConfig = {
   destination: {
     label: 'Destination',
@@ -96,7 +46,7 @@ const typeConfig = {
 }
 
 export function FavoritesSection() {
-  const [favorites, setFavorites] = useState<Favorite[]>(mockFavorites)
+  const [favorites, setFavorites] = useState<Favorite[]>([])
   const [activeTab, setActiveTab] = useState<string>('all')
 
   const filteredFavorites = activeTab === 'all'

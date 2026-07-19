@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Star, ThumbsUp, MessageCircle, Edit, Trash2, MoreVertical, Plane, Building, Calendar, Utensils, Plus, Loader2, Check } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/lib/apiClient'
 
 interface Review {
   id: string
@@ -37,55 +39,17 @@ interface Review {
   }
 }
 
-const mockReviews: Review[] = [
-  {
-    id: 'rev1',
-    type: 'hotel',
-    name: 'Hôtel Royal Beach',
-    image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=200',
-    rating: 5,
-    title: 'Séjour exceptionnel!',
-    comment: 'Vue magnifique sur l\'océan, service impeccable et personnel très attentionné. Je recommande vivement!',
-    date: '2024-02-15',
-    helpful: 12,
-    reply: {
-      author: 'Hôtel Royal Beach',
-      date: '2024-02-16',
-      content: 'Merci pour votre avis! Nous sommes ravis que votre séjour ait été exceptionnel. À bientôt!'
-    }
-  },
-  {
-    id: 'rev2',
-    type: 'flight',
-    name: 'Air France - Paris vers Tokyo',
-    rating: 4,
-    title: 'Bon vol, service correct',
-    comment: 'Vol confortable, repas corrects. Un peu de retard au décollage mais rien de grave.',
-    date: '2024-01-28',
-    helpful: 5
-  },
-  {
-    id: 'rev3',
-    type: 'event',
-    name: 'Festival de la Musique',
-    image: 'https://images.unsplash.com/photo-1459749411175-04bf529c15b?w=200',
-    rating: 5,
-    title: 'Expérience inoubliable',
-    comment: 'Organisation parfaite, ambiance géniale et artistes au top! Je reviendrai l\'année prochaine.',
-    date: '2024-01-20',
-    helpful: 23
-  },
-  {
-    id: 'rev4',
-    type: 'restaurant',
-    name: 'Le Petit Bistrot',
-    rating: 3,
-    title: 'Cuisine correcte mais service lent',
-    comment: 'Les plats étaient bons mais l\'attente était trop longue. Prix un peu élevé pour la qualité.',
-    date: '2024-01-10',
-    helpful: 3
-  }
-]
+type BackendReviewItem = {
+  id: string
+  rating: number
+  comment: string | null
+  createdAt: string
+  service?: { name: string; type: string; imageUrl: string | null } | null
+}
+
+type ReviewsResponse = {
+  items: BackendReviewItem[]
+}
 
 const typeConfig = {
   flight: {
@@ -114,43 +78,79 @@ const typeConfig = {
   }
 }
 
+const toReviewType = (type?: string | null): 'flight' | 'hotel' | 'event' | 'restaurant' => {
+  const t = type?.toUpperCase()
+  if (t === 'FLIGHT') return 'flight'
+  if (t === 'HOTEL' || t === 'GUIDE') return 'hotel'
+  if (t === 'EVENTS' || t === 'TRANSPORT') return 'event'
+  if (t === 'RESTAURANT') return 'restaurant'
+  return 'hotel'
+}
+
 export function ReviewHistory() {
-  const [reviews, setReviews] = useState<Review[]>(mockReviews)
+  const queryClient = useQueryClient()
+  const [reviews, setReviews] = useState<Review[]>([])
   const [showNewReviewDialog, setShowNewReviewDialog] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newReview, setNewReview] = useState({
     type: 'hotel',
-    name: '',
+    serviceId: '',
     rating: 5,
     title: '',
     comment: ''
   })
 
-  const handleDelete = (id: string) => {
-    setReviews(prev => prev.filter(r => r.id !== id))
+  const reviewsQuery = useQuery<ReviewsResponse>({
+    queryKey: ['my-reviews'],
+    queryFn: () => apiClient.get<ReviewsResponse>('/reviews?limit=100'),
+    staleTime: 30 * 1000,
+  })
+
+  useEffect(() => {
+    const items = reviewsQuery.data?.items ?? []
+    setReviews(
+      items.map((item) => ({
+        id: item.id,
+        type: toReviewType(item.service?.type),
+        name: item.service?.name ?? 'Service',
+        image: item.service?.imageUrl ?? undefined,
+        rating: Math.round(item.rating),
+        title:
+          item.comment && item.comment.length > 60
+            ? `${item.comment.slice(0, 60)}...`
+            : item.comment || 'Avis',
+        comment: item.comment || '',
+        date: item.createdAt.split('T')[0],
+        helpful: 0,
+      }))
+    )
+  }, [reviewsQuery.data])
+
+  const handleDelete = async (id: string) => {
+    try {
+      await apiClient.delete(`/reviews/${id}`)
+      queryClient.invalidateQueries({ queryKey: ['my-reviews'] })
+    } catch { /* ignore */ }
   }
 
   const handleSubmitReview = async () => {
-    if (!newReview.name || !newReview.title || !newReview.comment) return
+    if (!newReview.serviceId || !newReview.title || !newReview.comment) return
 
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    const review: Review = {
-      id: `rev${Date.now()}`,
-      type: newReview.type as any,
-      name: newReview.name,
-      rating: newReview.rating,
-      title: newReview.title,
-      comment: newReview.comment,
-      date: new Date().toISOString().split('T')[0],
-      helpful: 0
+    try {
+      await apiClient.post('/reviews', {
+        serviceId: newReview.serviceId,
+        rating: newReview.rating,
+        comment: newReview.title ? `${newReview.title}\n\n${newReview.comment}` : newReview.comment,
+      })
+      queryClient.invalidateQueries({ queryKey: ['my-reviews'] })
+      setShowNewReviewDialog(false)
+      setNewReview({ type: 'hotel', serviceId: '', rating: 5, title: '', comment: '' })
+    } catch (err: unknown) {
+      // Could surface error
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setReviews(prev => [review, ...prev])
-    setIsSubmitting(false)
-    setShowNewReviewDialog(false)
-    setNewReview({ type: 'hotel', name: '', rating: 5, title: '', comment: '' })
   }
 
   const renderStars = (rating: number, interactive: boolean = false, onChange?: (rating: number) => void) => {
@@ -342,11 +342,11 @@ export function ReviewHistory() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Nom</label>
+              <label className="text-sm font-medium">ID du service</label>
               <Input
-                placeholder="Nom de l'établissement, compagnie, etc."
-                value={newReview.name}
-                onChange={(e) => setNewReview(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Identifiant du service à évaluer"
+                value={newReview.serviceId}
+                onChange={(e) => setNewReview(prev => ({ ...prev, serviceId: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
@@ -385,7 +385,7 @@ export function ReviewHistory() {
             <Button 
               className="flex-1" 
               onClick={handleSubmitReview}
-              disabled={isSubmitting || !newReview.name || !newReview.title || !newReview.comment}
+              disabled={isSubmitting || !newReview.serviceId || !newReview.title || !newReview.comment}
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

@@ -53,6 +53,7 @@ export function HotelDetailsPage() {
   const hotel = hotelData ? adaptHotel(hotelData as unknown as ApiServiceItem) : null
   const { data: roomsData, isLoading: roomsLoading } = useHotelRooms(hotelId)
   const rooms = roomsData ?? []
+  const hotelDisplayPrice = rooms.length > 0 ? Math.min(...rooms.map(r => r.price)) : (hotel?.price ?? 0)
   const bookHotel = useBookHotel()
   const payWithWallet = usePayWithWallet()
 
@@ -75,7 +76,7 @@ export function HotelDetailsPage() {
   const calculateTotal = () => {
     const nights = calculateNights()
     const room = rooms.find(r => r.id === selectedRoom)
-    const pricePerNight = room?.price ?? hotel!.price
+    const pricePerNight = room?.price ?? hotelDisplayPrice
     return nights * pricePerNight * selectedRoomCount
   }
 
@@ -88,6 +89,8 @@ export function HotelDetailsPage() {
         checkInDate: checkInDate.toISOString(),
         checkOutDate: checkOutDate.toISOString(),
         guests,
+        roomId: selectedRoom,
+        roomCount: selectedRoomCount,
         paymentMethod: 'wallet',
       })
       // Settle payment from wallet immediately for non-flight services
@@ -314,7 +317,7 @@ export function HotelDetailsPage() {
                     À partir de
                   </div>
                   <div className="text-4xl font-bold text-[#44DBD4]">
-                    {formatPrice(hotel.price, hotel.currency)}
+                    {formatPrice(hotelDisplayPrice, hotel.currency)}
                   </div>
                   <div className="text-sm text-muted-foreground">par nuit</div>
                 </div>
@@ -372,7 +375,7 @@ export function HotelDetailsPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {formatPrice(rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price, hotel.currency)} x {calculateNights()} nuits x {selectedRoomCount} chambre(s)
+                        {formatPrice(rooms.find(r => r.id === selectedRoom)?.price ?? hotelDisplayPrice, hotel.currency)} x {calculateNights()} nuits x {selectedRoomCount} chambre(s)
                       </span>
                     </div>
                     <div className="flex justify-between font-semibold text-base">
@@ -464,12 +467,12 @@ export function HotelDetailsPage() {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>{formatPrice(rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price, hotel.currency)} x {calculateNights()} nuits</span>
-                    <span>{formatPrice((rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price) * calculateNights(), hotel.currency)}</span>
+                    <span>{formatPrice(rooms.find(r => r.id === selectedRoom)?.price ?? hotelDisplayPrice, hotel.currency)} x {calculateNights()} nuits</span>
+                    <span>{formatPrice((rooms.find(r => r.id === selectedRoom)?.price ?? hotelDisplayPrice) * calculateNights(), hotel.currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>{selectedRoomCount} chambre(s)</span>
-                    <span>{formatPrice((rooms.find(r => r.id === selectedRoom)?.price ?? hotel.price) * calculateNights() * selectedRoomCount, hotel.currency)}</span>
+                    <span>{formatPrice((rooms.find(r => r.id === selectedRoom)?.price ?? hotelDisplayPrice) * calculateNights() * selectedRoomCount, hotel.currency)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">
